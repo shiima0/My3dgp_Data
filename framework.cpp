@@ -144,7 +144,7 @@ bool framework::initialize(HWND hwnd)
 	};
 	
 
-	sdk = new skinned_mesh(Device, sdk_meshData[5]);
+	sdk = new skinned_mesh(Device, sdk_meshData[6]);
 
 	return true;
 }
