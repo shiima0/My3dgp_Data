@@ -73,7 +73,7 @@
     dcl_texcoord3 v3  // bone_weights<0,1,2,3>
     dcl_texcoord4 v4  // bone_indices<0,1,2,3>
 
-#line 8 "C:\Users\2170267.MAETEL\Desktop\謗域･ｭ邱丞粋繝輔か繝ｫ繝\・難ｼ､謗域･ｭ\3dgp Main\skinnd_mesh_vs.hlsl"
+#line 8 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\skinnd_mesh_vs.hlsl"
     mul r0, v1.x, c4
     mul r1, v1.y, c5
     add r0, r0, r1
@@ -167,7 +167,7 @@ dcl_temps 7
 //   o1.x <- <main return value>.color.x; o1.y <- <main return value>.color.y; o1.z <- <main return value>.color.z; o1.w <- <main return value>.color.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 7 "C:\Users\2170267.MAETEL\Desktop\授業総合フォルダ\EＤ授業\3dgp Main\skinnd_m"
+#line 7 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\skinnd_mesh_vs.hlsl"
 itof r0.x, l(0)  // r0.x <- normal.w
 mul r1.xyzw, v1.xxxx, cb0[4].xyzw
 mul r2.xyzw, v1.yyyy, cb0[5].xyzw

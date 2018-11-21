@@ -41,7 +41,7 @@
     dcl t1.xy  // pin<8,9>
     dcl_2d s0
 
-#line 11 "C:\Users\2170267.MAETEL\Desktop\謗域･ｭ邱丞粋繝輔か繝ｫ繝\・難ｼ､謗域･ｭ\3dgp Main\geometric_primitive_ps.hlsl"
+#line 11 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\geometric_primitive_ps.hlsl"
     texld r0, t1, s0
     mul r0, r0, t0  // ::main<0,1,2,3>
 
@@ -63,7 +63,7 @@ dcl_temps 1
 //   v2.x <- pin.texcoord.x; v2.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 11 "C:\Users\2170267.MAETEL\Desktop\授業総合フォルダ\EＤ授業\3dgp Main\geometric_primit"
+#line 11 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\geometric_primitive_ps.hlsl"
 sample r0.xyzw, v2.xyxx, t0.xyzw, s0
 mul o0.xyzw, r0.xyzw, v1.xyzw
 ret 

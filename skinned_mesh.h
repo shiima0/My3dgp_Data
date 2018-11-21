@@ -124,6 +124,8 @@ public:
 		int numIndex
 		);
 
+	void CBufferCreate(ID3D11Device*Device);
+
 	void render(ID3D11DeviceContext* Context,			//デバイスコンテキスト
 		const DirectX::XMFLOAT4X4& word_view,			//ワールド・ビュー・プロジェクション合成行列
 		const DirectX::XMFLOAT4X4& wordM,				//ワールド変換行列
@@ -132,9 +134,5 @@ public:
 		bool  bWareframe,								//線・塗りつぶし描画フラグ
 		float elapsed_time/*UNIT23*/
 		);	
-private:
-	int m_indexCount;
-	int m_vertexCount;
-	int m_latitudeNum;
-	int m_longitudeNum;
+
 };

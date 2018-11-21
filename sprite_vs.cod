@@ -35,7 +35,7 @@
     dcl_texcoord1 v1  // color<0,1,2,3>
     dcl_texcoord2 v2  // texcoord<0,1>
 
-#line 6 "C:\Users\2170267.MAETEL\Desktop\謗域･ｭ邱丞粋繝輔か繝ｫ繝\・難ｼ､謗域･ｭ\3dgp Main\sprite_vs.hlsl"
+#line 6 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\sprite_vs.hlsl"
     mov r0, v0  // ::vout<0,1,2,3>
     mov r1, v1  // ::vout<4,5,6,7>
 
@@ -69,7 +69,7 @@ dcl_temps 3
 //   o1.x <- <main return value>.color.x; o1.y <- <main return value>.color.y; o1.z <- <main return value>.color.z; o1.w <- <main return value>.color.w; 
 //   o0.x <- <main return value>.pos.x; o0.y <- <main return value>.pos.y; o0.z <- <main return value>.pos.z; o0.w <- <main return value>.pos.w
 //
-#line 6 "C:\Users\2170267.MAETEL\Desktop\授業総合フォルダ\EＤ授業\3dgp Main\spr"
+#line 6 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\sprite_vs.hlsl"
 mov r0.xyzw, v0.xyzw  // r0.x <- vout.pos.x; r0.y <- vout.pos.y; r0.z <- vout.pos.z; r0.w <- vout.pos.w
 mov r1.xyzw, v1.xyzw  // r1.x <- vout.color.x; r1.y <- vout.color.y; r1.z <- vout.color.z; r1.w <- vout.color.w
 

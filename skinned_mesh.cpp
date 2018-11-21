@@ -212,6 +212,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	if (FAILED(hr))return;
 
 
+
 	//Create the FBX SDK manager
 	FbxManager*manager = FbxManager::Create();
 
@@ -220,7 +221,6 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 
 	//Create an importer
 	FbxImporter*importer = FbxImporter::Create(manager, "");
-	
 	//Initialize the importer
 	bool import_status = false;
 	import_status = importer->Initialize(fbx_filename, -1, manager->GetIOSettings());
@@ -228,6 +228,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 
 	//Create a new scene so it can be populated by the imported file
 	FbxScene*scene = FbxScene::Create(manager, "");
+	
 
 	//Import the contents of the file into the scene
 	import_status = importer->Import(scene);
@@ -456,9 +457,8 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 		}
 		
 	}
-	
-		manager->Destroy();
 
+		manager->Destroy();
 
 		BufferEdit(Device, vertices.data(), (int)vertices.size(), indices.data(), (int)indices.size());
 		
@@ -515,7 +515,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 		hr = Device->CreateDepthStencilState(&depthDesc, &Depth);
 		if (FAILED(hr))return;
 
-
+		return;
 }
 
 
@@ -553,58 +553,83 @@ void  skinned_mesh::BufferEdit(ID3D11Device*Device,
 	u_int *indeices,
 	int numIndex) 
 {
-	
+	D3D11_BUFFER_DESC bd;
+
 	for(mesh &mesh : meshes)
 	{ 
+	
+		D3D11_SUBRESOURCE_DATA sub_data;
+
+		//頂点バッファ
+		ZeroMemory(&bd, sizeof(bd));
+		ZeroMemory(&sub_data, sizeof(sub_data));
+		//bd.ByteWidth = sizeof(vertices);
+		bd.ByteWidth = numVertices*sizeof(vertex);
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		//bd.CPUAccessFlags = 0;
+		//bd.MiscFlags = 0;
+		//bd.StructureByteStride = 0;
 
 		
-	
+
+		sub_data.pSysMem =  vertices;
+		//sub_data.SysMemPitch = 0;
+		//sub_data.SysMemSlicePitch = 0;
+		hr = Device->CreateBuffer(&bd, &sub_data, &mesh.vertex_buffer);
+		if (FAILED(hr)) {
+			
+			return;
+		}
+
+		//インデックスバッファ
+		ZeroMemory(&bd, sizeof(bd));
+		ZeroMemory(&sub_data, sizeof(sub_data));
+		//bd.ByteWidth = sizeof(indeices);
+		bd.ByteWidth = numIndex*sizeof(u_int);
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		//bd.CPUAccessFlags = 0;
+		//bd.MiscFlags = 0;
+		//bd.StructureByteStride = 0;
+
+		sub_data.pSysMem = indeices;
+		//sub_data.SysMemPitch = 0;
+		//sub_data.SysMemSlicePitch = 0;
+
+		//numindeices = numIndex;
+		hr = Device->CreateBuffer(&bd, &sub_data, &mesh.index_buffer);
+		if (FAILED(hr)) {
+			
+			return;
+		}
+		
+	}
+	//別の関数でコンスタントバッファ作る
+
+	////コンスタントバッファ
+	//ZeroMemory(&bd, sizeof(bd));
+	//bd.ByteWidth = sizeof(cbuffer);
+	//bd.Usage = D3D11_USAGE_DEFAULT;
+	//bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	////bd.CPUAccessFlags = 0;
+	////bd.MiscFlags = 0;
+	////bd.StructureByteStride = 0;
+
+
+	//hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
+	//if (FAILED(hr)) {
+	//	return;
+	//}
+
+}
+
+
+
+void skinned_mesh::CBufferCreate(ID3D11Device*Device) {
+
+
 	D3D11_BUFFER_DESC bd;
-	D3D11_SUBRESOURCE_DATA sub_data;
-
-	//頂点バッファ
-	ZeroMemory(&bd, sizeof(bd));
-	ZeroMemory(&sub_data, sizeof(sub_data));
-	//bd.ByteWidth = sizeof(vertices);
-	bd.ByteWidth = numVertices*sizeof(vertex);
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	//bd.CPUAccessFlags = 0;
-	//bd.MiscFlags = 0;
-	//bd.StructureByteStride = 0;
-
-	
-
-	sub_data.pSysMem =  vertices;
-	//sub_data.SysMemPitch = 0;
-	//sub_data.SysMemSlicePitch = 0;
-	hr = Device->CreateBuffer(&bd, &sub_data, &mesh.vertex_buffer);
-	if (FAILED(hr)) {
-		
-		return;
-	}
-
-	//インデックスバッファ
-	ZeroMemory(&bd, sizeof(bd));
-	ZeroMemory(&sub_data, sizeof(sub_data));
-	//bd.ByteWidth = sizeof(indeices);
-	bd.ByteWidth = numIndex*sizeof(u_int);
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	//bd.CPUAccessFlags = 0;
-	//bd.MiscFlags = 0;
-	//bd.StructureByteStride = 0;
-
-	sub_data.pSysMem = indeices;
-	//sub_data.SysMemPitch = 0;
-	//sub_data.SysMemSlicePitch = 0;
-
-	//numindeices = numIndex;
-	hr = Device->CreateBuffer(&bd, &sub_data, &mesh.index_buffer);
-	if (FAILED(hr)) {
-		
-		return;
-	}
 
 	//コンスタントバッファ
 	ZeroMemory(&bd, sizeof(bd));
@@ -614,18 +639,15 @@ void  skinned_mesh::BufferEdit(ID3D11Device*Device,
 	//bd.CPUAccessFlags = 0;
 	//bd.MiscFlags = 0;
 	//bd.StructureByteStride = 0;
-
-
-	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
-	if (FAILED(hr)) {
-		
-		return;
 	
-	}
-		
-		
+	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
+
+	if (FAILED(hr)) {
+		return;
 	}
 }
+
+
 
 void skinned_mesh::render(ID3D11DeviceContext*Context,
 	const DirectX::XMFLOAT4X4&world_view,
@@ -633,8 +655,7 @@ void skinned_mesh::render(ID3D11DeviceContext*Context,
 	const DirectX::XMFLOAT4& light,
 	const DirectX::XMFLOAT4& Material_color, 
 	bool  bWareframe,
-	float elapsed_time
-)
+	float elapsed_time)
 {
 
 	
