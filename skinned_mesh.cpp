@@ -395,6 +395,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 				
 				index_of_material = fbx_mesh->GetElementMaterial()->GetIndexArray().GetAt(index_of_polygon);
 
+				
 			}
 			
 			
@@ -429,7 +430,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 					bool unmapped_uv;
 					fbx_mesh->GetPolygonVertexUV(index_of_polygon, index_of_vertex, uv_names[0], uv, unmapped_uv);
 
-					vertex.texcoord.x = static_cast<float>(uv[0]);
+					vertex.texcoord.x =	static_cast<float>(uv[0]);
 					vertex.texcoord.y = 1.0f - static_cast<float>(uv[1]);
 					
 
@@ -440,7 +441,6 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 				for (int i = 0, max = bone_influences[index_of_control_point].size(); i < max; ++i) {
 					vertex.bone_weights[i] = bone_influences[index_of_control_point][i].weight;
 					vertex.bone_indices[i] = bone_influences[index_of_control_point][i].index;
-					
 				}
 			
 				vertices.push_back(vertex);
@@ -459,7 +459,9 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	}
 
 		manager->Destroy();
-
+		
+		
+		//CBufferCreate(Device, vertices.data(), (int)vertices.size(), indices.data(), (int)indices.size());
 		BufferEdit(Device, vertices.data(), (int)vertices.size(), indices.data(), (int)indices.size());
 		
 
@@ -514,8 +516,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 		depthDesc.StencilWriteMask = 0xff;
 		hr = Device->CreateDepthStencilState(&depthDesc, &Depth);
 		if (FAILED(hr))return;
-
-		return;
+		
 }
 
 
@@ -607,30 +608,6 @@ void  skinned_mesh::BufferEdit(ID3D11Device*Device,
 	}
 	//別の関数でコンスタントバッファ作る
 
-	////コンスタントバッファ
-	//ZeroMemory(&bd, sizeof(bd));
-	//bd.ByteWidth = sizeof(cbuffer);
-	//bd.Usage = D3D11_USAGE_DEFAULT;
-	//bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	////bd.CPUAccessFlags = 0;
-	////bd.MiscFlags = 0;
-	////bd.StructureByteStride = 0;
-
-
-	//hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
-	//if (FAILED(hr)) {
-	//	return;
-	//}
-
-}
-
-
-
-void skinned_mesh::CBufferCreate(ID3D11Device*Device) {
-
-
-	D3D11_BUFFER_DESC bd;
-
 	//コンスタントバッファ
 	ZeroMemory(&bd, sizeof(bd));
 	bd.ByteWidth = sizeof(cbuffer);
@@ -639,13 +616,42 @@ void skinned_mesh::CBufferCreate(ID3D11Device*Device) {
 	//bd.CPUAccessFlags = 0;
 	//bd.MiscFlags = 0;
 	//bd.StructureByteStride = 0;
-	
-	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
 
+
+	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
 	if (FAILED(hr)) {
 		return;
 	}
+
 }
+
+
+
+//void skinned_mesh::CBufferCreate(ID3D11Device*Device,
+//	vertex*vertices,
+//	int numVertices,
+//	u_int *indeices,
+//	int numIndex)
+//{
+//
+//
+//	D3D11_BUFFER_DESC bd;
+//
+//	//コンスタントバッファ
+//	ZeroMemory(&bd, sizeof(bd));
+//	bd.ByteWidth = sizeof(cbuffer);
+//	bd.Usage = D3D11_USAGE_DEFAULT;
+//	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+//	//bd.CPUAccessFlags = 0;
+//	//bd.MiscFlags = 0;
+//	//bd.StructureByteStride = 0;
+//	
+//	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
+//
+//	if (FAILED(hr)) {
+//		return;
+//	}
+//}
 
 
 
@@ -659,7 +665,6 @@ void skinned_mesh::render(ID3D11DeviceContext*Context,
 {
 
 	
-
 	UINT stride = sizeof(vertex);
 	UINT offset = 0;
 
@@ -767,8 +772,8 @@ void skinned_mesh::render(ID3D11DeviceContext*Context,
 	Context->PSSetSamplers(0, 1, &SamplerDesc);
 
 	//index付き描画
-	//D3D11_BUFFER_DESC buffer_desc;
-	//mesh.index_buffer->GetDesc(&buffer_desc);
+	D3D11_BUFFER_DESC buffer_desc;
+	mesh.index_buffer->GetDesc(&buffer_desc);
 
 	if(mesh.subsets.size()>1){
 		//Set vertex buffer

@@ -316,7 +316,7 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	 //cube->render(Context, wvp, w, light_dir, Matrial_col, bWareframe);
 	//Cylinder->render(Context, wvp, w, light_dir, Matrial_col, bWareframe);
-	//sdk->render(Context, wvp, w, light_dir, Matrial_col, bWareframe,elapsed_time);
+	sdk->render(Context, wvp, w, light_dir, Matrial_col, bWareframe,elapsed_time);
 	
 	SwapChain->Present(0, 0);
 

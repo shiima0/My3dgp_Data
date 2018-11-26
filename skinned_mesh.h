@@ -124,7 +124,12 @@ public:
 		int numIndex
 		);
 
-	void CBufferCreate(ID3D11Device*Device);
+	/*void CBufferCreate(ID3D11Device*Device,
+		vertex*vertices,
+		int T,
+		u_int* indeices,
+		int numIndex
+		);*/
 
 	void render(ID3D11DeviceContext* Context,			//デバイスコンテキスト
 		const DirectX::XMFLOAT4X4& word_view,			//ワールド・ビュー・プロジェクション合成行列
