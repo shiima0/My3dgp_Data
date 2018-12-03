@@ -118,6 +118,7 @@ geometric_primitive::~geometric_primitive()
 	if (Depth)Depth->Release();
 	if (RSSsolid)RSSsolid->Release();
 	if (RSSWireframe)RSSWireframe->Release();
+	if (Layout)Layout->Release();
 
 	
 

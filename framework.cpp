@@ -11,7 +11,7 @@ bool framework::initialize(HWND hwnd)
 	//_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
 
 	// CRTメモリリーク箇所検出
-	//_CrtSetBreakAlloc(34756);
+	//_CrtSetBreakAlloc(15654);
 	//MessageBox(NULL, _T("韻踏むなー！"), _T("ちょくちょく見てるけどやばそうだなお前の進捗!"), MB_OK | MB_ICONHAND);
 
 	HRESULT hr = S_OK;
@@ -129,22 +129,23 @@ bool framework::initialize(HWND hwnd)
 	
 	//cube = new geometric_primitive(Device);
 
-
-   // cube   = new geometric_Cube(Device);
 	char* sdk_meshData[] = {
-	 "000_cube.fbx",
-	 "001_cube.fbx",
-	 "002_cube.fbx",
-	 "003_cube.fbx",
-	 "004_cube.fbx",
-	 "005_cube.fbx",
-	"dummy_data.fbx",
-	"danbo_atk.fbx",
-	"ShachikuChan_ver3.fbx",
+	 "./fbx/000_cube.fbx",
+	 "./fbx/001_cube.fbx",
+	 "./fbx/002_cube.fbx",
+	 "./fbx/003_cube.fbx",
+	 "./fbx/004_cube.fbx",
+	 "./fbx/005_cube.fbx",
+	"./fbx/dummy_data.fbx",
+	"./fbx/danbo_atk.fbx",
+	"./fbx/danbo_taiki.fbx",
+	"./fbx/danbo_fly.fbx",
+	"./fbx/ShachikuChan_ver3.fbx",
+	
 	};
 	
 
-	sdk = new skinned_mesh(Device, sdk_meshData[6]);
+	sdk = new skinned_mesh(Device, sdk_meshData[7]);
 
 	return true;
 }
@@ -166,7 +167,7 @@ framework::~framework() {
 	if (RenderTargetView)RenderTargetView->Release();
 	if (SwapChain)SwapChain->Release();
 	if (Context)Context->Release();
-//    if (Device)Device->Release();
+
 	
 }
 void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
@@ -188,7 +189,7 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 
 	// Just clear the backbuffer
-	float ClearColor[4] = { 0.2f, 0.7f, 0.0f, 1.0f }; //red,green,blue,alpha
+	float ClearColor[4] = { 0.1f, 0.8f, 0.8f, 1.0f }; //red,green,blue,alpha
 	Context->ClearRenderTargetView(RenderTargetView, ClearColor);
 
 
@@ -250,13 +251,14 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	//		angle * 4, 0.2f, 0.05f*timer, 0.01f*timer, fabsf(sinf(3.141592f*timer*0.5f*0.5f)));
 	//}
 	
+	
 
-	const DirectX::XMFLOAT4 cpos(10, 5, -25,1);
+	const DirectX::XMFLOAT4 cpos(10, 5, -25,1);  
 	const DirectX::XMFLOAT4 ctarget(0, 0, 0, 1);
 
 	static DirectX::XMFLOAT3 pos(0, 0, 0);
-	static DirectX::XMFLOAT3 angle(0, 0, 0);
-	static DirectX::XMFLOAT3 scale(1, 1, 1);
+	static DirectX::XMFLOAT3 angle(-1.25, 0, 0);
+	static DirectX::XMFLOAT3 scale(0.01, 0.01, 0.01);
 
 	static float fovY = DirectX::XMConvertToRadians(30.0f);
 	

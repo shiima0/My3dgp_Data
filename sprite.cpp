@@ -215,13 +215,12 @@ void sprite::render(ID3D11DeviceContext*Context, float dx, float dy,float dw,flo
 
 	}
 
-	D3D11_MAPPED_SUBRESOURCE  mapped;
-	Context->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD,0, &mapped);
-	memcpy(mapped.pData,verticesNDC,sizeof(verticesNDC));
-	Context->Unmap(Buffer, 0);
+		D3D11_MAPPED_SUBRESOURCE  mapped;
+		Context->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD,0, &mapped);
+		memcpy(mapped.pData,verticesNDC,sizeof(verticesNDC));
+		Context->Unmap(Buffer, 0);
 	
 	
-
 		// Set vertex buffer
 		UINT stride = sizeof(vertex);
 		UINT offset = 0;

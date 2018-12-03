@@ -229,7 +229,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	//Create a new scene so it can be populated by the imported file
 	FbxScene*scene = FbxScene::Create(manager, "");
 	
-
+	
 	//Import the contents of the file into the scene
 	import_status = importer->Import(scene);
 	_ASSERT_EXPR_A(import_status, importer->GetStatus().GetErrorString());
@@ -257,6 +257,8 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	};
 	traverse(scene->GetRootNode());
 
+	
+	
 	//Fetch mesh data
 	std::vector<vertex>vertices;  //Vertex buffer
 	std::vector<u_int> indices;   //Index buffer
@@ -265,7 +267,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	//FbxMesh*fbx_mesh = fetched_meshes.at(0)->GetMesh();  //Currently only one mesh
 	meshes.resize(fetched_meshes.size());
 
-
+	
 	
 	for (size_t i = 0, max = fetched_meshes.size(); i < max; i++) {
 
@@ -398,7 +400,6 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 				
 			}
 			
-			
 			//Where should I save the vertex attribute index, according to the Material
 			subset &subset = mesh.subsets.at(index_of_material);
 
@@ -406,21 +407,22 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 
 			for (int index_of_vertex = 0; index_of_vertex < 3; index_of_vertex++) {
 
-				vertex vertex;
+				vertex _vertex;
+
 				const int index_of_control_point = fbx_mesh->GetPolygonVertex(index_of_polygon, index_of_vertex);
-				vertex.Position.x = static_cast<float>(array_of_control_points[index_of_control_point][0]);
-				vertex.Position.y = static_cast<float>(array_of_control_points[index_of_control_point][1]);
-				vertex.Position.z = static_cast<float>(array_of_control_points[index_of_control_point][2]);
+				_vertex.Position.x = static_cast<float>(array_of_control_points[index_of_control_point][0]);
+				_vertex.Position.y = static_cast<float>(array_of_control_points[index_of_control_point][1]);
+				_vertex.Position.z = static_cast<float>(array_of_control_points[index_of_control_point][2]);
 				//add unit 17
 				if (fbx_mesh->GetElementNormalCount() > 0) {
 					//end unit 17
 					FbxVector4 normal;
 					fbx_mesh->GetPolygonVertexNormal(index_of_polygon, index_of_vertex, normal);
-					vertex.normal.x = static_cast<float>(normal[0]);
-					vertex.normal.y = static_cast<float>(normal[1]);
-					vertex.normal.z = static_cast<float>(normal[2]);
+					_vertex.normal.x = static_cast<float>(normal[0]);
+					_vertex.normal.y = static_cast<float>(normal[1]);
+					_vertex.normal.z = static_cast<float>(normal[2]);
 
-					vertex.color = subset.diffuse.color;
+					_vertex.color = subset.diffuse.color;
 					
 				}
 
@@ -430,92 +432,106 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 					bool unmapped_uv;
 					fbx_mesh->GetPolygonVertexUV(index_of_polygon, index_of_vertex, uv_names[0], uv, unmapped_uv);
 
-					vertex.texcoord.x =	static_cast<float>(uv[0]);
-					vertex.texcoord.y = 1.0f - static_cast<float>(uv[1]);
+					_vertex.texcoord.x = static_cast<float>(uv[0]);
+					_vertex.texcoord.y = 1.0f - static_cast<float>(uv[1]);
 					
 
 				}
 				//UNIT20
 
 				//setBone Influences
-				for (int i = 0, max = bone_influences[index_of_control_point].size(); i < max; ++i) {
-					vertex.bone_weights[i] = bone_influences[index_of_control_point][i].weight;
-					vertex.bone_indices[i] = bone_influences[index_of_control_point][i].index;
+				for (int i = 0, max = bone_influences[index_of_control_point].size(); i < max && i < MAX_BONE_INFLUENCES; ++i) {
+					_vertex.bone_weights[i] = bone_influences[index_of_control_point][i].weight;
+					_vertex.bone_indices[i] = bone_influences[index_of_control_point][i].index;
 				}
 			
-				vertices.push_back(vertex);
+				vertices.push_back(_vertex);
 
-				//UNIT.18
-				//indices.push_back(vertex_count);
+			
 				indices.at(index_offset + index_of_vertex) = static_cast<u_int>(vertex_count);
 				vertex_count += 1;
 
 				
 			}
-			subset.index_count += 3;	//UNIT.18
+			subset.index_count += 3;	
 
 		}
+		mesh.BufferEdit(Device, vertices.data(), (int)vertices.size(), indices.data(), (int)indices.size());
+
+	}
+	
+	manager->Destroy();
 		
+	indices.clear();
+	vertices.clear();
+
+	
+	D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,	0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,		0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+
+		{ "WEIGHTS"	, 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "BONES"	, 0, DXGI_FORMAT_R32G32B32A32_SINT, 0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+	};
+
+	UINT numElements = ARRAYSIZE(layout);
+
+	
+	ResourceManager::LoadVertexShader(Device, "skinnd_mesh_vs.cso", layout, numElements, &Vertex, &Layout);
+	ResourceManager::LoadPixelShader(Device, "skinnd_mesh_ps.cso", &Pixel);
+
+	D3D11_RASTERIZER_DESC rsDesc;
+	ZeroMemory(&rsDesc, sizeof(D3D11_RASTERIZER_DESC));
+	//WIREFRAME
+	rsDesc.FillMode = D3D11_FILL_WIREFRAME;
+	rsDesc.CullMode = D3D11_CULL_FRONT;
+	rsDesc.FrontCounterClockwise = FALSE;
+	rsDesc.DepthClipEnable = TRUE;
+	rsDesc.DepthBiasClamp = 0;
+	rsDesc.SlopeScaledDepthBias = 0;
+	hr = Device->CreateRasterizerState(&rsDesc, &RSSWireframe);
+	if (FAILED(hr))return;
+
+	//SOLID
+	ZeroMemory(&rsDesc, sizeof(D3D11_RASTERIZER_DESC));
+	rsDesc.FillMode = D3D11_FILL_SOLID;
+	rsDesc.CullMode = /*D3D11_CULL_BACK*/ D3D11_CULL_NONE;
+	rsDesc.FrontCounterClockwise = FALSE;
+	rsDesc.DepthClipEnable = TRUE;
+	rsDesc.DepthBiasClamp = 0;
+	rsDesc.SlopeScaledDepthBias = 0;
+	hr = Device->CreateRasterizerState(&rsDesc, &RSSsolid);
+	if (FAILED(hr))return;
+
+	//深度ステンシルステート
+	D3D11_DEPTH_STENCIL_DESC  depthDesc;
+	ZeroMemory(&depthDesc, sizeof(depthDesc));
+	depthDesc.DepthEnable = TRUE;
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthDesc.StencilEnable = FALSE;
+	depthDesc.StencilReadMask = 0xff;
+	depthDesc.StencilWriteMask = 0xff;
+	hr = Device->CreateDepthStencilState(&depthDesc, &Depth);
+	if (FAILED(hr))return;
+
+	D3D11_BUFFER_DESC bd;
+
+	//コンスタントバッファ
+	ZeroMemory(&bd, sizeof(bd));
+	bd.ByteWidth = sizeof(cbuffer);
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
+	if (FAILED(hr)) {
+		return;
 	}
 
-		manager->Destroy();
-		
-		
-		//CBufferCreate(Device, vertices.data(), (int)vertices.size(), indices.data(), (int)indices.size());
-		BufferEdit(Device, vertices.data(), (int)vertices.size(), indices.data(), (int)indices.size());
-		
 
-		D3D11_INPUT_ELEMENT_DESC layout[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,	0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,		0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
-
-			{ "WEIGHTS"	, 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "BONES"	, 0, DXGI_FORMAT_R32G32B32A32_SINT, 0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
-		};
-
-		UINT numElements = ARRAYSIZE(layout);
-
-
-		ResourceManager::LoadVertexShader(Device, "skinnd_mesh_vs.cso", layout, numElements, &Vertex, &Layout);
-		ResourceManager::LoadPixelShader(Device, "skinnd_mesh_ps.cso", &Pixel);
-
-		D3D11_RASTERIZER_DESC rsDesc;
-		ZeroMemory(&rsDesc, sizeof(D3D11_RASTERIZER_DESC));
-		//WIREFRAME
-		rsDesc.FillMode = D3D11_FILL_WIREFRAME;
-		rsDesc.CullMode = D3D11_CULL_FRONT;
-		rsDesc.FrontCounterClockwise = FALSE;
-		rsDesc.DepthClipEnable = TRUE;
-		rsDesc.DepthBiasClamp = 0;
-		rsDesc.SlopeScaledDepthBias = 0;
-		hr = Device->CreateRasterizerState(&rsDesc, &RSSWireframe);
-		if (FAILED(hr))return;
-
-		//SOLID
-		ZeroMemory(&rsDesc, sizeof(D3D11_RASTERIZER_DESC));
-		rsDesc.FillMode = D3D11_FILL_SOLID;
-		rsDesc.CullMode = /*D3D11_CULL_BACK*/ D3D11_CULL_NONE;
-		rsDesc.FrontCounterClockwise = FALSE;
-		rsDesc.DepthClipEnable = TRUE;
-		rsDesc.DepthBiasClamp = 0;
-		rsDesc.SlopeScaledDepthBias = 0;
-		hr = Device->CreateRasterizerState(&rsDesc, &RSSsolid);
-		if (FAILED(hr))return;
-
-		//深度ステンシルステート
-		D3D11_DEPTH_STENCIL_DESC  depthDesc;
-		ZeroMemory(&depthDesc, sizeof(depthDesc));
-		depthDesc.DepthEnable = TRUE;
-		depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-		depthDesc.StencilEnable = FALSE;
-		depthDesc.StencilReadMask = 0xff;
-		depthDesc.StencilWriteMask = 0xff;
-		hr = Device->CreateDepthStencilState(&depthDesc, &Depth);
-		if (FAILED(hr))return;
 		
 }
 
@@ -532,8 +548,6 @@ skinned_mesh::~skinned_mesh()
 	if (SamplerDesc)SamplerDesc->Release();
 	
 
-
-	
 	ResourceManager::ReleasePixelShader(Pixel);
 	ResourceManager::ReleaseShaderResourceView(SRV);
 	ResourceManager::ReleaseVertexShader(Vertex, Layout);
@@ -544,11 +558,12 @@ skinned_mesh::~skinned_mesh()
 		mesh.subsets.at(i).diffuse.shader_resource_view->Release();
 		}
 	}
+
 	
-	
+
 }
 
-void  skinned_mesh::BufferEdit(ID3D11Device*Device,
+void  skinned_mesh::mesh::BufferEdit(ID3D11Device*Device,
 	vertex*vertices,
 	int numVertices,
 	u_int *indeices,
@@ -556,103 +571,55 @@ void  skinned_mesh::BufferEdit(ID3D11Device*Device,
 {
 	D3D11_BUFFER_DESC bd;
 
-	for(mesh &mesh : meshes)
-	{ 
-	
-		D3D11_SUBRESOURCE_DATA sub_data;
+	D3D11_SUBRESOURCE_DATA sub_data;
 
-		//頂点バッファ
-		ZeroMemory(&bd, sizeof(bd));
-		ZeroMemory(&sub_data, sizeof(sub_data));
-		//bd.ByteWidth = sizeof(vertices);
-		bd.ByteWidth = numVertices*sizeof(vertex);
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		//bd.CPUAccessFlags = 0;
-		//bd.MiscFlags = 0;
-		//bd.StructureByteStride = 0;
+	HRESULT hr = S_OK;
 
-		
 
-		sub_data.pSysMem =  vertices;
-		//sub_data.SysMemPitch = 0;
-		//sub_data.SysMemSlicePitch = 0;
-		hr = Device->CreateBuffer(&bd, &sub_data, &mesh.vertex_buffer);
-		if (FAILED(hr)) {
-			
-			return;
-		}
-
-		//インデックスバッファ
-		ZeroMemory(&bd, sizeof(bd));
-		ZeroMemory(&sub_data, sizeof(sub_data));
-		//bd.ByteWidth = sizeof(indeices);
-		bd.ByteWidth = numIndex*sizeof(u_int);
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		//bd.CPUAccessFlags = 0;
-		//bd.MiscFlags = 0;
-		//bd.StructureByteStride = 0;
-
-		sub_data.pSysMem = indeices;
-		//sub_data.SysMemPitch = 0;
-		//sub_data.SysMemSlicePitch = 0;
-
-		//numindeices = numIndex;
-		hr = Device->CreateBuffer(&bd, &sub_data, &mesh.index_buffer);
-		if (FAILED(hr)) {
-			
-			return;
-		}
-		
-	}
-	//別の関数でコンスタントバッファ作る
-
-	//コンスタントバッファ
+	//頂点バッファ
 	ZeroMemory(&bd, sizeof(bd));
-	bd.ByteWidth = sizeof(cbuffer);
+	ZeroMemory(&sub_data, sizeof(sub_data));
+	//bd.ByteWidth = sizeof(vertices);
+	bd.ByteWidth = numVertices*sizeof(vertex);
 	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	//bd.CPUAccessFlags = 0;
 	//bd.MiscFlags = 0;
 	//bd.StructureByteStride = 0;
 
 
-	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
+	sub_data.pSysMem =  vertices;
+	//sub_data.SysMemPitch = 0;
+	//sub_data.SysMemSlicePitch = 0;
+	hr = Device->CreateBuffer(&bd, &sub_data, &vertex_buffer);
 	if (FAILED(hr)) {
+		
 		return;
 	}
 
+	//インデックスバッファ
+	ZeroMemory(&bd, sizeof(bd));
+	ZeroMemory(&sub_data, sizeof(sub_data));
+	//bd.ByteWidth = sizeof(indeices);
+	bd.ByteWidth = numIndex*sizeof(u_int);
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	//bd.CPUAccessFlags = 0;
+	//bd.MiscFlags = 0;
+	//bd.StructureByteStride = 0;
+
+	sub_data.pSysMem = indeices;
+	//sub_data.SysMemPitch = 0;
+	//sub_data.SysMemSlicePitch = 0;
+
+	//numindeices = numIndex;
+	hr = Device->CreateBuffer(&bd, &sub_data, &index_buffer);
+	if (FAILED(hr)) {
+		
+		return;
+	}
+	
 }
-
-
-
-//void skinned_mesh::CBufferCreate(ID3D11Device*Device,
-//	vertex*vertices,
-//	int numVertices,
-//	u_int *indeices,
-//	int numIndex)
-//{
-//
-//
-//	D3D11_BUFFER_DESC bd;
-//
-//	//コンスタントバッファ
-//	ZeroMemory(&bd, sizeof(bd));
-//	bd.ByteWidth = sizeof(cbuffer);
-//	bd.Usage = D3D11_USAGE_DEFAULT;
-//	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-//	//bd.CPUAccessFlags = 0;
-//	//bd.MiscFlags = 0;
-//	//bd.StructureByteStride = 0;
-//	
-//	hr = Device->CreateBuffer(&bd, nullptr, &CBuffer);
-//
-//	if (FAILED(hr)) {
-//		return;
-//	}
-//}
-
 
 
 void skinned_mesh::render(ID3D11DeviceContext*Context,
@@ -664,42 +631,18 @@ void skinned_mesh::render(ID3D11DeviceContext*Context,
 	float elapsed_time)
 {
 
-	
 	UINT stride = sizeof(vertex);
 	UINT offset = 0;
 
-	//頂点バッファ||インデックスバッファが無ければ終了
-	if (!meshes.at(0).vertex_buffer || !meshes.at(0).index_buffer)return;
-
 
 	cbuffer cb;
-	//cb.world_view_projection = world_view;
-	//cb.world = worldM;
 	cb.light_direction = light;
 
-	
-	
 	for (mesh &mesh : meshes)
 	{
+		//頂点バッファ||インデックスバッファが無ければ終了
+		if (!mesh.vertex_buffer || !mesh.index_buffer)return;
 		
-		/*std::vector<bone>&skeletal = skeletal;
-		if (skeletal.size() <= 0) {
-			
-			DirectX::XMStoreFloat4x4(&cb.bone_transforms[0], DirectX::XMMatrixIdentity());
-			DirectX::XMStoreFloat4x4(&cb.bone_transforms[1], DirectX::XMMatrixIdentity());
-			DirectX::XMStoreFloat4x4(&cb.bone_transforms[2], DirectX::XMMatrixIdentity());
-			
-		}
-		else
-		{
-			for (size_t i = 0; i < skeletal.size(); i++) {
-
-				DirectX::XMStoreFloat4x4(&cb.bone_transforms[i], DirectX::XMLoadFloat4x4(&skeletal.at(i).transform));
-			}
-
-
-		}*/
-
 		if (mesh.skeletal_animation.size() > 0)
 		{
 			int frame = mesh.skeletal_animation.animation_tick / mesh.skeletal_animation.sampling_time;
@@ -722,84 +665,64 @@ void skinned_mesh::render(ID3D11DeviceContext*Context,
 			DirectX::XMStoreFloat4x4(&cb.bone_transforms[1], DirectX::XMMatrixIdentity());
 			DirectX::XMStoreFloat4x4(&cb.bone_transforms[2], DirectX::XMMatrixIdentity());
 		}
-	
-		for (size_t i = 0; i < mesh.subsets.size(); i++) {
-	
-	
-	DirectX::XMStoreFloat4x4(&cb.world_view_projection,
-		DirectX::XMLoadFloat4x4(&mesh.global_tramsform)*
-		DirectX::XMLoadFloat4x4(&coordinate_conversion)*
-		DirectX::XMLoadFloat4x4(&world_view));
 
-	DirectX::XMStoreFloat4x4(&cb.world,
-		DirectX::XMLoadFloat4x4(&mesh.global_tramsform)*
-		DirectX::XMLoadFloat4x4(&coordinate_conversion)*
-		DirectX::XMLoadFloat4x4(&worldM));
+		
+		
+		DirectX::XMStoreFloat4x4(&cb.world_view_projection,
+			DirectX::XMLoadFloat4x4(&mesh.global_tramsform)*
+			DirectX::XMLoadFloat4x4(&coordinate_conversion)*
+			DirectX::XMLoadFloat4x4(&world_view));
 
-	cb.material_color.x = mesh.subsets.at(i).diffuse.color.x*Material_color.x;
-	cb.material_color.y = mesh.subsets.at(i).diffuse.color.y*Material_color.y;
-	cb.material_color.z = mesh.subsets.at(i).diffuse.color.z*Material_color.z;
-	cb.material_color.w = Material_color.w;
+		DirectX::XMStoreFloat4x4(&cb.world,
+			DirectX::XMLoadFloat4x4(&mesh.global_tramsform)*
+			DirectX::XMLoadFloat4x4(&coordinate_conversion)*
+			DirectX::XMLoadFloat4x4(&worldM));
 
+		//サブセット
+		for (subset &subset : mesh.subsets) {
 
-	
-
-	
-	
-	// Set primitive topology
-	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	Context->UpdateSubresource(CBuffer, 0, NULL, &cb, 0, 0);	//定数バッファにコピー
-	Context->VSSetConstantBuffers(0, 1, &CBuffer);		   //シェーダーにデーターを渡す
+			//Set vertex buffer
+			Context->IASetVertexBuffers(0, 1, &mesh.vertex_buffer, &stride, &offset);
+			//Set index Buffer
+			Context->IASetIndexBuffer(mesh.index_buffer, DXGI_FORMAT_R32_UINT, 0);
 
 
+			cb.material_color.x = subset.diffuse.color.x*Material_color.x;
+			cb.material_color.y = subset.diffuse.color.y*Material_color.y;
+			cb.material_color.z = subset.diffuse.color.z*Material_color.z;
+			cb.material_color.w = Material_color.w;
 
-	//State
-	if (bWareframe) Context->RSSetState(RSSWireframe);
-	else            Context->RSSetState(RSSsolid);
+			Context->PSSetShaderResources(0, 1, &subset.diffuse.shader_resource_view);
 
-	// Set the input layout
-	Context->IASetInputLayout(Layout);
-
-	// Render a triangle
-	Context->VSSetShader(Vertex, NULL, 0);
-	Context->PSSetShader(Pixel, NULL, 0);
-
-	//depth
-	Context->OMSetDepthStencilState(Depth, 1);
-	
-
-	/*sample*/
-	Context->PSSetSamplers(0, 1, &SamplerDesc);
-
-	//index付き描画
-	D3D11_BUFFER_DESC buffer_desc;
-	mesh.index_buffer->GetDesc(&buffer_desc);
-
-	if(mesh.subsets.size()>1){
-		//Set vertex buffer
-		Context->IASetVertexBuffers(0, 1, &mesh.vertex_buffer, &stride, &offset);
-
-		//Set index Buffer
-		Context->IASetIndexBuffer(mesh.index_buffer, DXGI_FORMAT_R32_UINT, 0);
-	}
-	else {
-
-		//Set vertex buffer
-		Context->IASetVertexBuffers(0, 1, &meshes.at(i).vertex_buffer, &stride, &offset);
-
-		//Set index Buffer
-		Context->IASetIndexBuffer(meshes.at(i).index_buffer, DXGI_FORMAT_R32_UINT, 0);
-
-	}
-
-
-	Context->PSSetShaderResources(0, 1, &mesh.subsets.at(i).diffuse.shader_resource_view);
-
-	Context->DrawIndexed(mesh.subsets.at(i).index_start + mesh.subsets.at(i).index_count, 0, 0);
-
+			Context->DrawIndexed(subset.index_start + subset.index_count, 0, 0);
 		}
 
+		Context->UpdateSubresource(CBuffer, 0, NULL, &cb, 0, 0);	//定数バッファにコピー
+		Context->VSSetConstantBuffers(0, 1, &CBuffer);			   //シェーダーにデーターを渡す
+		
+		// Set primitive topology
+		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		//State
+		if (bWareframe) Context->RSSetState(RSSWireframe);
+		else            Context->RSSetState(RSSsolid);
+
+		// Set the input layout
+		Context->IASetInputLayout(Layout);
+
+		// Render a triangle
+		Context->VSSetShader(Vertex, NULL, 0);
+		Context->PSSetShader(Pixel, NULL, 0);
+
+		//depth
+		Context->OMSetDepthStencilState(Depth, 1);
+
+		/*sample*/
+		Context->PSSetSamplers(0, 1, &SamplerDesc);
+
+		
 	}
+
 }
 
 

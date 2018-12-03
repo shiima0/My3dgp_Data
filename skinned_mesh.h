@@ -4,6 +4,9 @@
 
 
 #define MAX_BONES (32)
+
+
+
 class skinned_mesh {
 protected:
 
@@ -97,11 +100,20 @@ public:
 		float animation_tick = 0.0f;
 	};
 	
-	struct mesh
+	 struct mesh
 	{
-		ID3D11Buffer*vertex_buffer;
-		ID3D11Buffer*index_buffer;
+		ID3D11Buffer *vertex_buffer;
+		ID3D11Buffer *index_buffer;
 		std::vector<subset>subsets;
+		
+
+
+		 void BufferEdit(ID3D11Device*Device,
+			vertex*vertices,
+			int T,
+			u_int* indeices,
+			int numIndex
+		);
 
 		//追加
 		DirectX::XMFLOAT4X4 global_tramsform = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
@@ -113,23 +125,13 @@ public:
 		skeletal_animation skeletal_animation;
 	};
 	std::vector<mesh>meshes;
-
+	
 	
 
 
-	void BufferEdit(ID3D11Device*Device,
-		vertex*vertices,
-		int T,
-		u_int* indeices,
-		int numIndex
-		);
+	
 
-	/*void CBufferCreate(ID3D11Device*Device,
-		vertex*vertices,
-		int T,
-		u_int* indeices,
-		int numIndex
-		);*/
+	
 
 	void render(ID3D11DeviceContext* Context,			//デバイスコンテキスト
 		const DirectX::XMFLOAT4X4& word_view,			//ワールド・ビュー・プロジェクション合成行列

@@ -26,9 +26,6 @@
     <Filter Include="Shaders\skinnd_mesh">
       <UniqueIdentifier>{12ebe9cc-68a8-47da-a6c4-6b785c736ef4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Sources\shaderSources">
-      <UniqueIdentifier>{ee19e518-76da-4f48-acd5-ee08fdf0c372}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="framework.cpp">
