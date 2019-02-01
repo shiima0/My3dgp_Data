@@ -3,25 +3,6 @@
 #include"WICTextureLoader.h"
 #include "ResourceManager.h"
 
-
-
-
-
-bool ReadBinaryFile(const char*filename, BYTE**data, unsigned int &size) {
-	//cso
-	FILE*fp = 0;
-	if (fopen_s(&fp, filename, "rb")) return false;
-	fseek(fp, 0, SEEK_END);
-	size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	*data = new  unsigned char[size];
-	fread(*data, size, 1, fp);
-	fclose(fp);
-
-	return true;
-}
-
-
 sprite::sprite(ID3D11Device*Device,const wchar_t*file_name) {
 
 	HRESULT hr;
@@ -49,15 +30,6 @@ sprite::sprite(ID3D11Device*Device,const wchar_t*file_name) {
 	if (FAILED(hr))
 		return;
 
-	//コンパイル済み頂点シェーダーオブジェクト読み込み
-//	if (!ReadBinaryFile("sprite_vs.cso", &data, size))return;
-//
-//	//Create the Vertex Shader
-////	hr = Device->CreateVertexShader(data, size, nullptr, &Vertex);
-//
-//	if (FAILED(hr)) {
-//		return;
-//	}
 
 	// Define the input layout
 	
@@ -90,7 +62,6 @@ sprite::sprite(ID3D11Device*Device,const wchar_t*file_name) {
 
 	ResourceManager::LoadShaderResourceView(Device, file_name,&SRV, &Tex2d_desc);
 	
-
 
 
 	//サンプラーステート設定
@@ -151,16 +122,16 @@ sprite::~sprite() {
 	
 }
 void sprite::render(ID3D11DeviceContext*Context, float dx, float dy,float dw,float dh,float sx,float sy,float sw,float sh,
-					float angle,float r,float g, float b, float a,ALIGN rotAlign)
+					float angle,DirectX::XMFLOAT4 rgba, /*Shader* shader,*/ALIGN rotAlign)
 {
-	
+
 	
 	//スクリーン空間左上大きさ１の■
 	vertex vertices[] = {						   //R G B A
-		{ DirectX::XMFLOAT3(0,0,0),DirectX::XMFLOAT4(r,g,b,a),DirectX::XMFLOAT2(sx,sy)},
-		{ DirectX::XMFLOAT3(1,0,0),DirectX::XMFLOAT4(r,g,b,a),DirectX::XMFLOAT2(sx+sw,sy)},
-		{ DirectX::XMFLOAT3(0,1,0),DirectX::XMFLOAT4(r,g,b,a),DirectX::XMFLOAT2(sx,sy+sh)},
-		{ DirectX::XMFLOAT3(1,1,0),DirectX::XMFLOAT4(r,g,b,a),DirectX::XMFLOAT2(sx+sw,sy+sh)},
+		{ DirectX::XMFLOAT3(0,0,0),DirectX::XMFLOAT4(rgba),DirectX::XMFLOAT2(sx,sy)},
+		{ DirectX::XMFLOAT3(1,0,0),DirectX::XMFLOAT4(rgba),DirectX::XMFLOAT2(sx+sw,sy)},
+		{ DirectX::XMFLOAT3(0,1,0),DirectX::XMFLOAT4(rgba),DirectX::XMFLOAT2(sx,sy+sh)},
+		{ DirectX::XMFLOAT3(1,1,0),DirectX::XMFLOAT4(rgba),DirectX::XMFLOAT2(sx+sw,sy+sh)},
 	};
 	//アフィン変換
 	
@@ -242,6 +213,7 @@ void sprite::render(ID3D11DeviceContext*Context, float dx, float dy,float dw,flo
 		Context->PSSetShader(PixelShader,NULL, 0);
 		Context->PSSetShaderResources(0, 1, &SRV);
 		Context->PSSetSamplers(0, 1, &Sample);
+		//SetSlot(Context, 0);
 
 		//depth
 		Context->OMSetDepthStencilState(Depth, 0);
@@ -251,8 +223,17 @@ void sprite::render(ID3D11DeviceContext*Context, float dx, float dy,float dw,flo
 
 
 		Context->Draw(4, 0);
+
+		
+	
 		
 
+}
+
+void sprite::SetSlot(ID3D11DeviceContext*Context,int slot)
+{
+	Context->PSSetShaderResources(slot, 1, &SRV);
+	Context->PSSetSamplers(slot, 1, &Sample);
 }
 
 

@@ -18,6 +18,8 @@
 // SV_POSITION              0   xyzw        0      POS   float       
 // COLOR                    0   xyzw        1     NONE   float   xyzw
 // TEXCOORD                 0   xy          2     NONE   float   xy  
+// NORMAL                   0   xyz         3     NONE   float       
+// TEXCOORD                 1   xyz         4     NONE   float       
 //
 //
 // Output signature:
@@ -41,7 +43,7 @@
     dcl t1.xy  // pin<8,9>
     dcl_2d s0
 
-#line 11 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\skinnd_mesh_ps.hlsl"
+#line 11 "C:\Users\2170267.MAETEL\Desktop\testç”¨3dgp\skinnd_mesh_ps.hlsl"
     texld r0, t1, s0
     mul r0, r0, t0  // ::main<0,1,2,3>
 
@@ -61,9 +63,11 @@ dcl_temps 1
 //   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
 //   v1.x <- pin.color.x; v1.y <- pin.color.y; v1.z <- pin.color.z; v1.w <- pin.color.w; 
 //   v2.x <- pin.texcoord.x; v2.y <- pin.texcoord.y; 
+//   v3.x <- pin.Normal.x; v3.y <- pin.Normal.y; v3.z <- pin.Normal.z; 
+//   v4.x <- pin.ViewVec.x; v4.y <- pin.ViewVec.y; v4.z <- pin.ViewVec.z; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 11 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\skinnd_mesh_ps.hlsl"
+#line 11 "C:\Users\2170267.MAETEL\Desktop\test—p3dgp\skinnd_mesh_ps.hls"
 sample r0.xyzw, v2.xyxx, t0.xyzw, s0
 mul o0.xyzw, r0.xyzw, v1.xyzw
 ret 

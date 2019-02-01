@@ -1,12 +1,25 @@
 #include "framework.h"
 #include "ResourceManager.h"
-
+#include"DXShader.h"
+#include<math.h>
 #include <crtdbg.h>
+
+//	半球ライティング+平行光
+ID3D11VertexShader* HSL_Vertex;
+ID3D11PixelShader*  HSL_Pixel;
+ID3D11InputLayout*  HSL_Layout;
+
+//映り込み
+ID3D11VertexShader* TEST_Vertex;
+ID3D11PixelShader*  TEST_Pixel;
+ID3D11InputLayout*  TEST_Layout;
 
 
 
 bool framework::initialize(HWND hwnd)
 {
+
+
 	// CRTメモリリーク検出用
 	//_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
 
@@ -19,9 +32,7 @@ bool framework::initialize(HWND hwnd)
 	UINT createDeviceFlags = 0;
 	HINSTANCE               hInst = NULL;
 	HWND                    hWnd = NULL;
-	
 
-	
 
 #ifdef _DEBUG
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -37,6 +48,7 @@ bool framework::initialize(HWND hwnd)
 
 	D3D_FEATURE_LEVEL featureLevels[] =
 	{
+
 		D3D_FEATURE_LEVEL_11_0,
 		D3D_FEATURE_LEVEL_10_1,
 		D3D_FEATURE_LEVEL_10_0,
@@ -118,8 +130,13 @@ bool framework::initialize(HWND hwnd)
 	//blendイニシャライズ
 	Blend::Initialize(Device);
 
-	//sprites[0] = new sprite(Device, L"logos.jpg");
-	//sprites[1] = new sprite(Device, L"n64.png");
+	
+
+
+	sprites[0] = new sprite(Device, L"hdri1.jpeg");
+	sprites[0]->SetSlot(Context, 1);
+	
+	sprites[1] = new sprite(Device, L"hdri1.jpeg");
 
 	/*for (auto&p :sprites) {
 		p = new sprite(Device, L"player-sprites.png");
@@ -127,7 +144,7 @@ bool framework::initialize(HWND hwnd)
 */
 	//particle = new sprite (Device, L"particle-smoke.png");
 	
-	//cube = new geometric_primitive(Device);
+	cube = new geometric_Cube(Device);
 
 	char* sdk_meshData[] = {
 	 "./fbx/000_cube.fbx",
@@ -144,15 +161,41 @@ bool framework::initialize(HWND hwnd)
 	
 	};
 	
+	
+	
+	
+	sdk[0] = new skinned_mesh(Device, sdk_meshData[0]);
+	sdk[1] = new skinned_mesh(Device, sdk_meshData[8]);
+	
 
-	sdk = new skinned_mesh(Device, sdk_meshData[7]);
+
+	D3D11_INPUT_ELEMENT_DESC HSL_layout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,	0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,		0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+
+		{ "WEIGHTS"	, 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "BONES"	, 0, DXGI_FORMAT_R32G32B32A32_SINT, 0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0 },
+	};
+
+	UINT HSL_numElements = ARRAYSIZE(HSL_layout);
+
+	ResourceManager::LoadVertexShader(Device, "skinnd_mesh_vs.cso", HSL_layout, HSL_numElements, &HSL_Vertex, &HSL_Layout);
+	ResourceManager::LoadPixelShader(Device, "Shader_test_ps.cso", &HSL_Pixel);
+
+	ResourceManager::LoadVertexShader(Device, "skinnd_mesh_vs.cso", HSL_layout, HSL_numElements, &TEST_Vertex, &TEST_Layout);
+	ResourceManager::LoadPixelShader(Device, "Lighting_ps.cso", &TEST_Pixel);
 
 	return true;
 }
 framework::~framework() {
 	
+	for (int i = 0; i < 10; i++) {
+		if (sdk[i])delete sdk[i];
+	}
 	
-	if (sdk)delete sdk;
 	for (auto&p : sprites) {
 		delete p;
 		
@@ -172,10 +215,13 @@ framework::~framework() {
 }
 void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 {
-
+	
 }
 void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 {
+	
+
+	
 
 	// Setup the viewport
 	D3D11_VIEWPORT vp;
@@ -189,7 +235,7 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 
 	// Just clear the backbuffer
-	float ClearColor[4] = { 0.1f, 0.8f, 0.8f, 1.0f }; //red,green,blue,alpha
+	float ClearColor[4] = { 0.8f, 0.0f, 0.4f, 1.0f }; //red,green,blue,alpha
 	Context->ClearRenderTargetView(RenderTargetView, ClearColor);
 
 
@@ -215,22 +261,26 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 			y += 24;
 		}
 	}*/
+	static float alpha = .0f;
+	DirectX::XMFLOAT4 rgba (1, 1, 1, alpha);
 	
 	static Blend::BLEND_MODE mode = Blend::NONE;
 	if (GetAsyncKeyState('O') & 0x01)		
 		mode = (Blend::BLEND_MODE)((mode + (Blend::MODE_MAX - 1)) % Blend::MODE_MAX);
 	if (GetAsyncKeyState('P') & 0x01)		
 		mode = (Blend::BLEND_MODE)((mode + 1) % Blend::MODE_MAX);
-	static float alpha = .0f;
+
 	if (GetAsyncKeyState('K') < 0)
 		alpha = (alpha -= 0.005f) < 0.0f ? 0.0f : alpha;
 	if (GetAsyncKeyState('L') < 0)
 		alpha = (alpha += 0.005f) > 1.0f ? 1.0f : alpha;
 
 	Blend::Set(Context, Blend::NONE);
-	//sprites[0]->render(Context, 0, 0, 960, 540, 0, 0, 1920, 1080, .0f, 1.0f, 1.0f, 1.0f, 1.0f);
+	//sprites[0]->render(Context, 0, 0, 960, 540, 0, 0, 1920, 1080, .0f, rgba);
 	//Blend::Set(Context, mode);
-	//sprites[1]->render(Context, 100, 100, 900, 877, 0, 0, 900, 877, .0f, 1.0f, 1.0f, 1.0f,alpha);
+	//sprites[1]->render(Context, 0, 0, 1280, 720, 0, 0, 600, 300, .0f, rgba);
+	sprites[1]->render(Context, 0, 0, 1280, 720, 0, 0, 4096, 2048, .0f, rgba);
+
 	
 
 	//static DirectX::XMFLOAT2 sprite_position[1024] = {};//screen space
@@ -253,29 +303,33 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	
 	
 
-	const DirectX::XMFLOAT4 cpos(10, 5, -25,1);  
+	const DirectX::XMFLOAT4 cpos(10, 10, -25,1);  
 	const DirectX::XMFLOAT4 ctarget(0, 0, 0, 1);
 
-	static DirectX::XMFLOAT3 pos(0, 0, 0);
+	static DirectX::XMFLOAT3 pos(0, -0.5, 0);
+	//仮
+	static DirectX::XMFLOAT3 pos2(+1.0, -0.3, 0);
+	//
 	static DirectX::XMFLOAT3 angle(-1.25, 0, 0);
 	static DirectX::XMFLOAT3 scale(0.01, 0.01, 0.01);
 
 	static float fovY = DirectX::XMConvertToRadians(30.0f);
 	
 	static DirectX::XMFLOAT4 light_dir(0, 0, 1, 0);
+//	static DirectX::XMFLOAT4 light_dir(1.0, -1.0, -1.0, 0);
 	static DirectX::XMFLOAT4 Matrial_col(1, 1, 1, 1);
 
-	/*angle.x += DirectX::XMConvertToRadians(30.0f)*elapsed_time;
-	angle.y += DirectX::XMConvertToRadians(30.0f)*elapsed_time;
-	angle.z += DirectX::XMConvertToRadians(30.0f)*elapsed_time;*/
-
-	if (GetAsyncKeyState(VK_LEFT)   & 1)pos.x -= 0.2f;
+	//angle.x += DirectX::XMConvertToRadians(30.0f)*elapsed_time;
+	//angle.y += DirectX::XMConvertToRadians(30.0f)*elapsed_time;
+	angle.z += DirectX::XMConvertToRadians(30.0f)*elapsed_time;
+	
+	/*if (GetAsyncKeyState(VK_LEFT) & 1)pos.x -= 0.2f;
 	if (GetAsyncKeyState(VK_RIGHT)  & 1)pos.x += 0.2f;
 	if (GetAsyncKeyState(VK_UP)		& 1)pos.y += 0.2f;
-	if (GetAsyncKeyState(VK_DOWN)   & 1)pos.y -= 0.2f;
+	if (GetAsyncKeyState(VK_DOWN)   & 1)pos.y -= 0.2f;*/
 	
 		//ワールド変換
-	DirectX::XMMATRIX S, Rx, Ry, Rz, R, T, W;					//ここを数学とかでした!!Quaterni恩!!化する(ジンバルロックを直そうの巻き)
+	DirectX::XMMATRIX S, Rx, Ry, Rz, R, T, W,W2;					//ここを数学とかでした!!Quaterni恩!!化する(ジンバルロックを直そうの巻き)
 	S  = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);   
 	Rx = DirectX::XMMatrixRotationX(angle.x);
 	Ry = DirectX::XMMatrixRotationY(angle.y);
@@ -284,6 +338,10 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	T  = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 	W  = S*R*T;  //状況によって変えることがあるが8割り方これでいける
 
+	//仮
+	S = DirectX::XMMatrixScaling(0.3, 0.3, 0.3);
+	T = DirectX::XMMatrixTranslation(pos2.x, pos2.y, pos2.z);
+	W2 = S*R*T;
 
 
 				//ビュー変換行列
@@ -310,15 +368,55 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	if (GetAsyncKeyState('E') & 1)bWareframe = !bWareframe;
 
-	DirectX::XMFLOAT4X4 w, wvp;
+	DirectX::XMFLOAT4X4 w,w2, wvp,wvp2;
+	
 	DirectX::XMStoreFloat4x4(&w, W);
 	DirectX::XMStoreFloat4x4(&wvp, W*V*P);
-	
+
+	DirectX::XMStoreFloat4x4(&w2, W2);
+	DirectX::XMStoreFloat4x4(&wvp2, W2*V*P);
 	//描画
 
-	 //cube->render(Context, wvp, w, light_dir, Matrial_col, bWareframe);
+//	 cube->render(Context, wvp, w, light_dir, Matrial_col, bWareframe);
 	//Cylinder->render(Context, wvp, w, light_dir, Matrial_col, bWareframe);
-	sdk->render(Context, wvp, w, light_dir, Matrial_col, bWareframe,elapsed_time);
+
+
+	static ID3D11VertexShader* vs = nullptr;
+	static ID3D11InputLayout*  il = nullptr;
+	static ID3D11PixelShader*  ps = nullptr;
+	//	デフォルト
+	if (GetAsyncKeyState('0') & 0x01) {
+		vs = nullptr;
+		il = nullptr;
+		ps = nullptr;
+	}
+	//	半球ライティング+平行光
+	if (GetAsyncKeyState('1') & 0x01) {
+		vs = HSL_Vertex;
+		il = HSL_Layout;
+		ps = HSL_Pixel;
+	}
+	//	映り込み
+	static bool bg = false;
+	if (GetAsyncKeyState('2') & 0x01) {
+		vs = TEST_Vertex;
+		il = TEST_Layout;
+		ps = TEST_Pixel;
+		
+	}
+	
+		
+	static bool box_draw = false;
+	if (GetAsyncKeyState('B') & 0x01) {
+		box_draw = !box_draw;
+	}
+	if (box_draw) {
+		
+		sdk[0]->render(Context, wvp2, w2, light_dir, Matrial_col, bWareframe, elapsed_time, vs, il, ps);
+		
+	}
+	
+	sdk[1]->render(Context, wvp, w, light_dir, Matrial_col, bWareframe, elapsed_time, vs, il, ps);
 	
 	SwapChain->Present(0, 0);
 

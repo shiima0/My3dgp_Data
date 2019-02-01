@@ -26,6 +26,12 @@
     <Filter Include="Shaders\skinnd_mesh">
       <UniqueIdentifier>{12ebe9cc-68a8-47da-a6c4-6b785c736ef4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Shader_test">
+      <UniqueIdentifier>{280984ed-abc8-4537-8d68-da31b0293268}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Many types_ps">
+      <UniqueIdentifier>{a70c8ce6-a1f5-4efd-8de1-a9e1f84ee1f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="framework.cpp">
@@ -50,6 +56,9 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="skinned_mesh.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="DXShader.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -87,6 +96,15 @@
     <ClInclude Include="Vectors.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\math.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DXShader.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="geometric_primitive_ps.hlsl">
@@ -107,6 +125,15 @@
     <FxCompile Include="skinnd_mesh_vs.hlsl">
       <Filter>Shaders\skinnd_mesh</Filter>
     </FxCompile>
+    <FxCompile Include="Shader_test_vs.hlsl">
+      <Filter>Shaders\Shader_test</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader_test_ps.hlsl">
+      <Filter>Shaders\Shader_test</Filter>
+    </FxCompile>
+    <FxCompile Include="LIghting_ps.hlsl">
+      <Filter>Shaders\Many types_ps</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="geometric_primitive.hlsli">
@@ -117,6 +144,12 @@
     </None>
     <None Include="skinnd_mesh.hlsli">
       <Filter>Shaders\skinnd_mesh</Filter>
+    </None>
+    <None Include="Shader_test.hlsli">
+      <Filter>Shaders\Shader_test</Filter>
+    </None>
+    <None Include="Many_types.hlsli">
+      <Filter>Shaders\Many types_ps</Filter>
     </None>
   </ItemGroup>
 </Project>

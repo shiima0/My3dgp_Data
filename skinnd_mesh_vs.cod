@@ -42,6 +42,8 @@
 // SV_POSITION              0   xyzw        0      POS   float   xyzw
 // COLOR                    0   xyzw        1     NONE   float   xyzw
 // TEXCOORD                 0   xy          2     NONE   float   xy  
+// NORMAL                   0   xyz         3     NONE   float   xyz 
+// TEXCOORD                 1   xyz         4     NONE   float   xyz 
 //
 //
 // Constant buffer to DX9 shader constant mappings:
@@ -61,7 +63,7 @@
 // Level9 shader bytecode:
 //
     vs_2_x
-    def c142, 4, 0, 1, 0
+    def c142, 4, 0, 1, 20
     def c138, 1, 0, 0, 0
     def c139, 0, 1, 0, 0
     def c140, 0, 0, 1, 0
@@ -73,72 +75,88 @@
     dcl_texcoord3 v3  // bone_weights<0,1,2,3>
     dcl_texcoord4 v4  // bone_indices<0,1,2,3>
 
-#line 8 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\skinnd_mesh_vs.hlsl"
-    mul r0, v1.x, c4
-    mul r1, v1.y, c5
-    add r0, r0, r1
-    mul r1, v1.z, c6
-    add r0, r0, r1
-    add r0, r0, c138.w
-    dp4 r1.x, r0, r0
-    rsq r1.x, r1.x
-    mul r0, r0, r1.x  // ::N<0,1,2,3>
-    mov r1, -c9
-    dp4 r2.x, r1, r1
-    rsq r2.x, r2.x
-    mul r1, r1, r2.x  // ::L<0,1,2,3>
-
-#line 15
-    mov r2.xyz, c138.w  // ::p<0,1,2>
+#line 13 "C:\Users\2170267.MAETEL\Desktop\testç”¨3dgp\skinnd_mesh_vs.hlsl"
+    mov r0.xyz, c138.w  // ::p<0,1,2>
+    mov r1.xyz, c138.w  // ::n<0,1,2>
     loop aL, i0
-      dp4 r2.w, v3, c138[aL]
-      dp4 r3.x, v4, c138[aL]
-      mul r3.x, r3.x, c142.x
-      mova a0.x, r3.x
-      mul r3.xyz, v0.x, c10[a0.x]
-      mul r4.xyz, v0.y, c11[a0.x]
-      add r3.xyz, r3, r4
-      mul r4.xyz, v0.z, c12[a0.x]
-      add r3.xyz, r3, r4
-      mul r4.xyz, v0.w, c13[a0.x]
-      add r3.xyz, r3, r4
-      mul r3.xyz, r2.w, r3
-      add r2.xyz, r2, r3  // ::p<0,1,2>
+      dp4 r0.w, v3, c138[aL]
+      dp4 r1.w, v4, c138[aL]
+      mul r1.w, r1.w, c142.x
+      mova a0.x, r1.w
+      mul r2.xyz, v0.x, c10[a0.x]
+      mul r3.xyz, v0.y, c11[a0.x]
+      add r2.xyz, r2, r3
+      mul r3.xyz, v0.z, c12[a0.x]
+      add r2.xyz, r2, r3
+      mul r3.xyz, v0.w, c13[a0.x]
+      add r2.xyz, r2, r3
+      mul r2.xyz, r0.w, r2
+      add r0.xyz, r0, r2  // ::p<0,1,2>
+      dp4 r0.w, v3, c138[aL]
+      dp4 r1.w, v4, c138[aL]
+      mul r1.w, r1.w, c142.x
+      mova a0.x, r1.w
+      mul r2.xyz, v1.x, c10[a0.x]
+      mul r3.xyz, v1.y, c11[a0.x]
+      add r2.xyz, r2, r3
+      mul r3.xyz, v1.z, c12[a0.x]
+      add r2.xyz, r2, r3
+      add r2.xyz, r2, c138.w
+      mul r2.xyz, r0.w, r2
+      add r1.xyz, r1, r2  // ::n<0,1,2>
     endloop
-    mov r2.xyz, r2  // position<0,1,2>
+    mov r0.xyz, r0  // position<0,1,2>
+    mov r1.xyz, r1  // normal<0,1,2>
 
-#line 40
-    mul r3, r2.x, c0
-    mul r4, r2.y, c1
-    add r3, r3, r4
-    mul r2, r2.z, c2
+#line 38
+    mul r2, r0.x, c0
+    mul r3, r0.y, c1
+    add r2, r2, r3
+    mul r3, r0.z, c2
     add r2, r2, r3
     mov r3.x, c138.x
     mul r3, r3.x, c3
     add r2, r2, r3  // ::vout<0,1,2,3>
 
-#line 46
-    dp4 r0.x, r1, r0
-    max r0.x, r0.x, c138.w
-    mul r0.xyz, r0.x, c8  // ::vout<4,5,6>
+#line 41
+    mul r3, r1.x, c4
+    mul r4, r1.y, c5
+    add r3, r3, r4
+    mul r1, r1.z, c6
+    add r1, r1, r3
+    add r1, r1, c138.w
+    dp4 r0.w, r1, r1
+    rsq r0.w, r0.w
+    mul r1, r0.w, r1  // ::N<0,1,2,3>
+    mov r3, -c9
+    dp4 r0.w, r3, r3
+    rsq r0.w, r0.w
+    mul r3, r0.w, r3  // ::L<0,1,2,3>
+
+#line 47
+    dp4 r0.w, r3, r1
+    max r0.w, r0.w, c138.w
+    mul r3.xyz, r0.w, c8  // ::vout<4,5,6>
     mov r0.w, c8.w  // ::vout<7>
 
-#line 50
-    mov r1.xy, v2  // ::vout<8,9>
-
-#line 53
-    mov oT0.xyz, r0  // ::main<4,5,6>
+#line 51
+    mov r4.xy, v2  // ::vout<8,9>
+    mov r1.xyz, r1  // ::vout<10,11,12>
+    add r0.xyz, r0, -c142.yxww  // ::vout<13,14,15>
+    mov oT0.xyz, r3  // ::main<4,5,6>
     mov oT0.w, r0.w  // ::main<7>
+    mov oT2.xyz, r1  // ::main<10,11,12>
+    mov oT3.xyz, r0  // ::main<13,14,15>
     mov r2.xy, r2  // ::main<0,1>
     mov r2.zw, r2  // ::main<2,3>
-    mov oT1.xy, r1  // ::main<8,9>
+    mov oT1.xy, r4  // ::main<8,9>
 
 #line 2
     mul r0.xy, r2.w, c143
     add oPos.xy, r0, r2  // ::main<0,1>
     mov oPos.zw, r2  // ::main<2,3>
 
-// approximately 54 instruction slots used
+// approximately 72 instruction slots used
 vs_4_0
 dcl_immediateConstantBuffer { { 1.000000, 0, 0, 0},
                               { 0, 1.000000, 0, 0},
@@ -157,6 +175,8 @@ dcl_input v4.xyzw
 dcl_output_siv o0.xyzw, position
 dcl_output o1.xyzw
 dcl_output o2.xy
+dcl_output o3.xyz
+dcl_output o4.xyz
 dcl_temps 7
 //
 // Initial variable locations:
@@ -165,79 +185,101 @@ dcl_temps 7
 //   v2.x <- texcoord.x; v2.y <- texcoord.y; 
 //   v3.x <- bone_weights.x; v3.y <- bone_weights.y; v3.z <- bone_weights.z; v3.w <- bone_weights.w; 
 //   v4.x <- bone_indices.x; v4.y <- bone_indices.y; v4.z <- bone_indices.z; v4.w <- bone_indices.w; 
+//   o4.x <- <main return value>.ViewVec.x; o4.y <- <main return value>.ViewVec.y; o4.z <- <main return value>.ViewVec.z; 
+//   o3.x <- <main return value>.Normal.x; o3.y <- <main return value>.Normal.y; o3.z <- <main return value>.Normal.z; 
 //   o2.x <- <main return value>.texcoord.x; o2.y <- <main return value>.texcoord.y; 
 //   o1.x <- <main return value>.color.x; o1.y <- <main return value>.color.y; o1.z <- <main return value>.color.z; o1.w <- <main return value>.color.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 7 "C:\Users\2170267.MAETEL\Documents\GitHub\MyData\3dgp Main\skinnd_mesh_vs.hlsl"
-itof r0.x, l(0)  // r0.x <- normal.w
-mul r1.xyzw, v1.xxxx, cb0[4].xyzw
-mul r2.xyzw, v1.yyyy, cb0[5].xyzw
-add r1.xyzw, r1.xyzw, r2.xyzw
-mul r2.xyzw, v1.zzzz, cb0[6].xyzw
-add r1.xyzw, r1.xyzw, r2.xyzw
-mul r0.xyzw, r0.xxxx, cb0[7].xyzw
-add r0.xyzw, r0.xyzw, r1.xyzw
-dp4 r1.x, r0.xyzw, r0.xyzw
-rsq r1.x, r1.x
-mul r0.xyzw, r0.xyzw, r1.xxxx  // r0.x <- N.x; r0.y <- N.y; r0.z <- N.z; r0.w <- N.w
-mov r1.xyzw, -cb0[9].xyzw
-dp4 r2.x, r1.xyzw, r1.xyzw
-rsq r2.x, r2.x
-mul r1.xyzw, r1.xyzw, r2.xxxx  // r1.x <- L.x; r1.y <- L.y; r1.z <- L.z; r1.w <- L.w
-
-#line 12
-itof r2.xyz, l(0, 0, 0, 0)  // r2.x <- p.x; r2.y <- p.y; r2.z <- p.z
-
-#line 15
-mov r2.w, l(0)  // r2.w <- index_bone
-mov r3.xyz, r2.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
-mov r3.w, r2.w  // r3.w <- index_bone
+#line 10 "C:\Users\2170267.MAETEL\Desktop\test—p3dgp\skinnd_mesh_vs.hls"
+itof r0.xyz, l(0, 0, 0, 0)  // r0.x <- p.x; r0.y <- p.y; r0.z <- p.z
+itof r1.xyz, l(0, 0, 0, 0)  // r1.x <- n.x; r1.y <- n.y; r1.z <- n.z
+mov r0.w, l(0)  // r0.w <- index_bone
+mov r2.xyz, r0.xyzx  // r2.x <- p.x; r2.y <- p.y; r2.z <- p.z
+mov r3.xyz, r1.xyzx  // r3.x <- n.x; r3.y <- n.y; r3.z <- n.z
+mov r1.w, r0.w  // r1.w <- index_bone
 loop 
-  ilt r4.x, r3.w, l(4)
-  breakc_z r4.x
-  dp4 r4.x, v3.xyzw, icb[r3.w + 0].xyzw
-  and r5.xyzw, v4.xyzw, icb[r3.w + 4].xyzw
+  ilt r2.w, r1.w, l(4)
+  breakc_z r2.w
+  dp4 r2.w, v3.xyzw, icb[r1.w + 0].xyzw
+  and r4.xyzw, v4.xyzw, icb[r1.w + 4].xyzw
+  or r4.xy, r4.ywyy, r4.xzxx
+  or r4.x, r4.y, r4.x
+  imul null, r4.x, r4.x, l(4)
+  mul r4.yzw, v0.xxxx, cb0[r4.x + 10].xxyz
+  mul r5.xyz, v0.yyyy, cb0[r4.x + 11].xyzx
+  add r4.yzw, r4.yyzw, r5.xxyz
+  mul r5.xyz, v0.zzzz, cb0[r4.x + 12].xyzx
+  add r4.yzw, r4.yyzw, r5.xxyz
+  mul r5.xyz, v0.wwww, cb0[r4.x + 13].xyzx
+  add r4.xyz, r4.yzwy, r5.xyzx
+  mul r4.xyz, r2.wwww, r4.xyzx
+  add r2.xyz, r2.xyzx, r4.xyzx
+  dp4 r2.w, v3.xyzw, icb[r1.w + 0].xyzw
+  itof r4.x, l(0)
+  and r5.xyzw, v4.xyzw, icb[r1.w + 4].xyzw
   or r4.yz, r5.yywy, r5.xxzx
   or r4.y, r4.z, r4.y
   imul null, r4.y, r4.y, l(4)
-  mul r5.xyz, v0.xxxx, cb0[r4.y + 10].xyzx
-  mul r6.xyz, v0.yyyy, cb0[r4.y + 11].xyzx
+  mul r5.xyz, v1.xxxx, cb0[r4.y + 10].xyzx
+  mul r6.xyz, v1.yyyy, cb0[r4.y + 11].xyzx
   add r5.xyz, r5.xyzx, r6.xyzx
-  mul r6.xyz, v0.zzzz, cb0[r4.y + 12].xyzx
+  mul r6.xyz, v1.zzzz, cb0[r4.y + 12].xyzx
   add r5.xyz, r5.xyzx, r6.xyzx
-  mul r4.yzw, v0.wwww, cb0[r4.y + 13].xxyz
-  add r4.yzw, r4.yyzw, r5.xxyz
-  mul r4.xyz, r4.yzwy, r4.xxxx
+  mul r4.xyz, r4.xxxx, cb0[r4.y + 13].xyzx
+  add r4.xyz, r4.xyzx, r5.xyzx
+  mul r4.xyz, r2.wwww, r4.xyzx
   add r3.xyz, r3.xyzx, r4.xyzx
-  iadd r3.w, r3.w, l(1)
+  iadd r1.w, r1.w, l(1)
 endloop 
-mov r3.xyz, r3.xyzx  // r3.x <- position.x; r3.y <- position.y; r3.z <- position.z
-mov r2.x, l(1.000000)  // r2.x <- position.w
+mov r2.xyz, r2.xyzx  // r2.x <- position.x; r2.y <- position.y; r2.z <- position.z
+mov r0.x, l(1.000000)  // r0.x <- position.w
+mov r3.w, l(0)
+mov r3.xyzw, r3.xyzw  // r3.x <- normal.x; r3.y <- normal.y; r3.z <- normal.z; r3.w <- normal.w
 
-#line 40
-mul r4.xyzw, r3.xxxx, cb0[0].xyzw
-mul r5.xyzw, r3.yyyy, cb0[1].xyzw
-add r4.xyzw, r4.xyzw, r5.xyzw
-mul r3.xyzw, r3.zzzz, cb0[2].xyzw
-add r3.xyzw, r3.xyzw, r4.xyzw
-mul r2.xyzw, r2.xxxx, cb0[3].xyzw
-add r2.xyzw, r2.xyzw, r3.xyzw  // r2.x <- vout.position.x; r2.y <- vout.position.y; r2.z <- vout.position.z; r2.w <- vout.position.w
+#line 38
+mul r1.xyzw, r2.xxxx, cb0[0].xyzw
+mul r4.xyzw, r2.yyyy, cb0[1].xyzw
+add r1.xyzw, r1.xyzw, r4.xyzw
+mul r4.xyzw, r2.zzzz, cb0[2].xyzw
+add r1.xyzw, r1.xyzw, r4.xyzw
+mul r0.xyzw, r0.xxxx, cb0[3].xyzw
+add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z; r0.w <- vout.position.w
 
-#line 46
-itof r3.x, l(0)
-dp4 r0.x, r1.xyzw, r0.xyzw
-max r0.x, r0.x, r3.x
-mul r0.xyz, r0.xxxx, cb0[8].xyzx  // r0.x <- vout.color.x; r0.y <- vout.color.y; r0.z <- vout.color.z
-mov r0.w, cb0[8].w  // r0.w <- vout.color.w
+#line 41
+mul r1.xyzw, r3.xxxx, cb0[4].xyzw
+mul r4.xyzw, r3.yyyy, cb0[5].xyzw
+add r1.xyzw, r1.xyzw, r4.xyzw
+mul r4.xyzw, r3.zzzz, cb0[6].xyzw
+add r1.xyzw, r1.xyzw, r4.xyzw
+mul r3.xyzw, r3.wwww, cb0[7].xyzw
+add r1.xyzw, r1.xyzw, r3.xyzw
+dp4 r2.w, r1.xyzw, r1.xyzw
+rsq r2.w, r2.w
+mul r1.xyzw, r1.xyzw, r2.wwww  // r1.x <- N.x; r1.y <- N.y; r1.z <- N.z; r1.w <- N.w
+mov r3.xyzw, -cb0[9].xyzw
+dp4 r2.w, r3.xyzw, r3.xyzw
+rsq r2.w, r2.w
+mul r3.xyzw, r2.wwww, r3.xyzw  // r3.x <- L.x; r3.y <- L.y; r3.z <- L.z; r3.w <- L.w
 
-#line 50
-mov r1.xy, v2.xyxx  // r1.x <- vout.texcoord.x; r1.y <- vout.texcoord.y
+#line 47
+itof r2.w, l(0)
+dp4 r1.w, r3.xyzw, r1.xyzw
+max r1.w, r1.w, r2.w
+mul r3.xyz, r1.wwww, cb0[8].xyzx  // r3.x <- vout.color.x; r3.y <- vout.color.y; r3.z <- vout.color.z
+mov r1.w, cb0[8].w  // r1.w <- vout.color.w
 
-#line 53
-mov o0.xyzw, r2.xyzw
-mov o1.xyz, r0.xyzx
-mov o1.w, r0.w
-mov o2.xy, r1.xyxx
+#line 51
+mov r4.xy, v2.xyxx  // r4.x <- vout.texcoord.x; r4.y <- vout.texcoord.y
+mov r1.xyz, r1.xyzx  // r1.x <- vout.Normal.x; r1.y <- vout.Normal.y; r1.z <- vout.Normal.z
+itof r5.xyz, l(0, 4, 20, 0)
+mov r5.xyz, -r5.xyzx
+add r2.xyz, r2.xyzx, r5.xyzx  // r2.x <- vout.ViewVec.x; r2.y <- vout.ViewVec.y; r2.z <- vout.ViewVec.z
+mov o0.xyzw, r0.xyzw
+mov o1.xyz, r3.xyzx
+mov o1.w, r1.w
+mov o3.xyz, r1.xyzx
+mov o4.xyz, r2.xyzx
+mov o2.xy, r4.xyxx
 ret 
-// Approximately 58 instruction slots used
+// Approximately 82 instruction slots used

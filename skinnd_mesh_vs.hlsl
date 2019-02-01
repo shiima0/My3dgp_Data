@@ -1,12 +1,10 @@
-#include"skinnd_mesh_ps.hlsl"
+#include"skinnd_mesh.hlsli"
 VS_OUT main(float4 position : POSITION, float4 normal : NORMAL, float2 texcoord : TEXCOORD, float4 bone_weights : WEIGHTS, uint4 bone_indices : BONES) //UNIT20追加ありテキストコードの後ろから分！
 {
 	VS_OUT vout;
-	vout.position = mul(position, world_view_projection);
+	//vout.position = mul(position, world_view_projection);
 
 	normal.w = 0;
-	float4 N = normalize(mul(normal, world));
-	float4 L = normalize(-light_direction);
 
 	//UNIT21
 	float3 p = { 0,0,0 };
@@ -18,30 +16,33 @@ VS_OUT main(float4 position : POSITION, float4 normal : NORMAL, float2 texcoord 
 	}
 
 	position = float4(p, 1.0f);
-	normal =   float4(n, 0.0f);
+	normal   = float4(n, 0.0f);
 
-	//UNIT20
-	float4 influence = { 0,0,0,1 };
-	for (int i = 0; i < 4; i++) {
-		float weight = bone_weights[i];
-		if (weight > 0.0f) {
-			switch (bone_indices[i])
-			{
-			case 0: influence.r = weight; break;
-			case 1: influence.g = weight; break;
-			case 2: influence.b = weight; break;
-			default:break;
-			}
-		}
-	}
+	////UNIT20
+	//float4 influence = { 0,0,0,1 };
+	//for (int i = 0; i < 4; i++) {
+	//	float weight = bone_weights[i];
+	//	if (weight > 0.0f) {
+	//		switch (bone_indices[i])
+	//		{
+	//		case 0: influence.r = weight; break;
+	//		case 1: influence.g = weight; break;
+	//		case 2: influence.b = weight; break;
+	//		default:break;
+	//		}
+	//	}
+	//}
 
-	
+
 
 	vout.position = mul(position, world_view_projection);
 
-	
+
+	float4 N = normalize(mul(normal, world));
+	float4 L = normalize(-light_direction);
+
 	//vout.color = influence;
-	
+
 
 	vout.color = material_color*max(0, dot(L, N));
 	vout.color.a = material_color.a;
@@ -49,6 +50,9 @@ VS_OUT main(float4 position : POSITION, float4 normal : NORMAL, float2 texcoord 
 	//Unit 17
 	vout.texcoord = texcoord;
 
+	vout.Normal = N.xyz;
+
+	vout.ViewVec = position.xyz-float3(0,4,20);
 
 	return vout;
 }

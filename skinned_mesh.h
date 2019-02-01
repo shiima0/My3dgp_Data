@@ -16,8 +16,8 @@ protected:
 	//ID3D11Buffer*       Buffer;
 	//ID3D11Buffer*       IBuffer;
 	ID3D11Buffer*       CBuffer;
-	ID3D11RasterizerState*RSSWireframe;
-	ID3D11RasterizerState* RSSsolid;
+	ID3D11RasterizerState*RSWireframe;
+	ID3D11RasterizerState* RSsolid;
 	ID3D11DepthStencilState* Depth;
 	ID3D11SamplerState*      SamplerDesc;
 
@@ -126,12 +126,17 @@ public:
 	};
 	std::vector<mesh>meshes;
 	
-	
-
 
 	
 
-	
+	//void render(ID3D11DeviceContext* Context,			//デバイスコンテキスト
+	//	const DirectX::XMFLOAT4X4& word_view,			//ワールド・ビュー・プロジェクション合成行列
+	//	const DirectX::XMFLOAT4X4& wordM,				//ワールド変換行列
+	//	const DirectX::XMFLOAT4& light,					//ライト進行方向
+	//	const DirectX::XMFLOAT4& Material_color,		//素材質色
+	//	bool  bWareframe,								//線・塗りつぶし描画フラグ
+	//	float elapsed_time/*UNIT23*/
+	//	);	
 
 	void render(ID3D11DeviceContext* Context,			//デバイスコンテキスト
 		const DirectX::XMFLOAT4X4& word_view,			//ワールド・ビュー・プロジェクション合成行列
@@ -139,7 +144,10 @@ public:
 		const DirectX::XMFLOAT4& light,					//ライト進行方向
 		const DirectX::XMFLOAT4& Material_color,		//素材質色
 		bool  bWareframe,								//線・塗りつぶし描画フラグ
-		float elapsed_time/*UNIT23*/
-		);	
+		float elapsed_time,/*UNIT23*/
+		ID3D11VertexShader* Vertex = nullptr,
+		ID3D11InputLayout*  Layout = nullptr,
+		ID3D11PixelShader*  Pixel  = nullptr
+	);
 
 };

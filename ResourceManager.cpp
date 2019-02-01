@@ -3,11 +3,23 @@
 #include "sprite.h"
 #include "ResourceManager.h"
 
-bool ReadBinaryFile(const char*filename, BYTE**data, unsigned int &size);
+bool ReadBinaryFile(const char*filename, BYTE**data, unsigned int &size) {
+	//cso
+	FILE*fp = 0;
+	if (fopen_s(&fp, filename, "rb")) return false;
+	fseek(fp, 0, SEEK_END);
+	size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	*data = new  unsigned char[size];
+	fread(*data, size, 1, fp);
+	fclose(fp);
+
+	return true;
+}
 
 ResourceManager::ResourceShaderView		  ResourceManager::SRViews[ResourceManager::RESOURCE_MAX];
 ResourceManager::ResourceVertxShaders     ResourceManager::VertexShaders[ResourceManager::RESOURCE_MAX];
-ResourceManager::ResourecePixelShader     ResourceManager::Pixels [ResourceManager::RESOURCE_MAX];
+ResourceManager::ResourecePixelShader     ResourceManager::Pixels[ResourceManager::RESOURCE_MAX];
 
 void ResourceManager::Rleease()
 {
@@ -21,8 +33,8 @@ void ResourceManager::Rleease()
 
 bool ResourceManager::LoadShaderResourceView(ID3D11Device*Device, const wchar_t*fileName, ID3D11ShaderResourceView**SRView, D3D11_TEXTURE2D_DESC*TexDesc)
 {
-	
-	int no = -1;			//新データ保存先番号
+
+	int no = -1;						//新データ保存先番号
 	ResourceShaderView*find = NULL;		//見つかったデータor新データ
 	ID3D11Resource*Resource = NULL;
 	//データ検索
@@ -48,12 +60,12 @@ bool ResourceManager::LoadShaderResourceView(ID3D11Device*Device, const wchar_t*
 	if (!find)
 	{
 
-	ResourceShaderView* p = &SRViews[no];
-	HRESULT	hr = DirectX::CreateWICTextureFromFile(Device, fileName, &Resource, &(p->SRView));  
-	if (FAILED(hr)) {
-		_ASSERTE(false, "FAILED LOAD TEXTURE");
-		return false;
-	}
+		ResourceShaderView* p = &SRViews[no];
+		HRESULT	hr = DirectX::CreateWICTextureFromFile(Device, fileName, &Resource, &(p->SRView));
+		if (FAILED(hr)) {
+			_ASSERTE(false, "FAILED LOAD TEXTURE");
+			return false;
+		}
 		find = p;					          //発見
 		wcscpy_s(p->path, 256, fileName);    //名前コピー
 	}
@@ -63,13 +75,13 @@ bool ResourceManager::LoadShaderResourceView(ID3D11Device*Device, const wchar_t*
 	Resource->QueryInterface(&texture2d);  //テクスチャデータの準備
 
 	texture2d->GetDesc(TexDesc);		   //データコピー
-	*SRView= find->SRView;
-	
+	*SRView = find->SRView;
+
 
 	find->iRefNum++;					   //数を追加
 
 	texture2d->Release();				   //不要データ解放
-	Resource->Release();			  
+	Resource->Release();
 
 	return true;
 
@@ -86,7 +98,7 @@ bool ResourceManager::LoadVertexShader(ID3D11Device*Device, const char*csofileNa
 
 	wchar_t   filename[256];
 	size_t    stringSize = 0;
-	mbstowcs_s(&stringSize, filename, csofileName ,strlen(csofileName));
+	mbstowcs_s(&stringSize, filename, csofileName, strlen(csofileName));
 
 	//データ検索
 	for (int n = 0; n < RESOURCE_MAX; n++) {
@@ -140,14 +152,14 @@ bool ResourceManager::LoadVertexShader(ID3D11Device*Device, const char*csofileNa
 
 	return true;
 }
-bool ResourceManager::LoadPixelShader(ID3D11Device*Device,  const char *csofileName,ID3D11PixelShader**Pixel)
+bool ResourceManager::LoadPixelShader(ID3D11Device*Device, const char *csofileName, ID3D11PixelShader**Pixel)
 {
 	int no = -1;							//新データ保存先番号
 	ResourecePixelShader*find = NULL;		//見つかったデータor新データ
 
 	wchar_t filename[256];
 	size_t stringSize = 0;
-	mbstowcs_s(&stringSize, filename, csofileName,strlen(csofileName));
+	mbstowcs_s(&stringSize, filename, csofileName, strlen(csofileName));
 	//データ検索
 	for (int n = 0; n < RESOURCE_MAX; n++) {
 		ResourecePixelShader*p = &Pixels[n];
@@ -189,7 +201,7 @@ bool ResourceManager::LoadPixelShader(ID3D11Device*Device,  const char *csofileN
 	//最終処理(参照渡しでデータを返す)
 	*Pixel = find->Pixel;
 
-	find->iRefNum++;					  
+	find->iRefNum++;
 
 	return true;
 
@@ -218,7 +230,7 @@ void ResourceManager::ReleaseShaderResourceView(ID3D11ShaderResourceView*SRView)
 
 	}
 }
- 
+
 void ResourceManager::ReleaseVertexShader(ID3D11VertexShader * VertexShader, ID3D11InputLayout * InputLayout)
 {
 	if (!VertexShaders)return;
@@ -232,7 +244,7 @@ void ResourceManager::ReleaseVertexShader(ID3D11VertexShader * VertexShader, ID3
 		if (p->iRefNum == 0) continue;
 
 		//データが違うなら
-		if (VertexShader!= p->VShader) continue;
+		if (VertexShader != p->VShader) continue;
 		if (InputLayout != p->Layout)continue;
 
 		//データが存在した

@@ -13,8 +13,8 @@ protected:
 	ID3D11Buffer*       Buffer;
 	ID3D11Buffer*       IBuffer;
 	ID3D11Buffer*       CBuffer;
-	ID3D11RasterizerState*RSSWireframe;
-	ID3D11RasterizerState* RSSsolid;
+	ID3D11RasterizerState*RSWireframe;
+	ID3D11RasterizerState* RSsolid;
 	ID3D11DepthStencilState* Depth;
 public:
 

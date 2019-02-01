@@ -1,7 +1,7 @@
 #pragma once
 #include <d3d11.h>
 #include<DirectXMath.h>
-
+#include"DXShader.h"
 
 
 class sprite {
@@ -33,12 +33,13 @@ public:
 
 	~sprite();
 
-	void render(ID3D11DeviceContext * Context, float dx, float dy, float dw, float dh, float
-		sx, float sy, float sw, float sh, float
-		angle, float r, float g, float b, float a,
+	void render(ID3D11DeviceContext * Context, float dx, float dy, float dw, float dh,
+		float sx, float sy, float sw, float sh,
+		float angle, DirectX::XMFLOAT4 rgba,
+		/*Shader* shader,*/
 		ALIGN rotAlign= ALIGN_CENTERMIDDLE);
 	
-
+	
 
 
 	struct vertex
@@ -48,4 +49,6 @@ public:
 		//UNIT4
 		DirectX::XMFLOAT2 texcoord;
 	};
+
+	void SetSlot(ID3D11DeviceContext*Context, int slot);
 };

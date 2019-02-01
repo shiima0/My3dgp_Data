@@ -480,6 +480,9 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	UINT numElements = ARRAYSIZE(layout);
 
 	
+	
+
+
 	ResourceManager::LoadVertexShader(Device, "skinnd_mesh_vs.cso", layout, numElements, &Vertex, &Layout);
 	ResourceManager::LoadPixelShader(Device, "skinnd_mesh_ps.cso", &Pixel);
 
@@ -492,7 +495,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	rsDesc.DepthClipEnable = TRUE;
 	rsDesc.DepthBiasClamp = 0;
 	rsDesc.SlopeScaledDepthBias = 0;
-	hr = Device->CreateRasterizerState(&rsDesc, &RSSWireframe);
+	hr = Device->CreateRasterizerState(&rsDesc, &RSWireframe);
 	if (FAILED(hr))return;
 
 	//SOLID
@@ -503,7 +506,7 @@ skinned_mesh::skinned_mesh(ID3D11Device*Device, const char *fbx_filename)
 	rsDesc.DepthClipEnable = TRUE;
 	rsDesc.DepthBiasClamp = 0;
 	rsDesc.SlopeScaledDepthBias = 0;
-	hr = Device->CreateRasterizerState(&rsDesc, &RSSsolid);
+	hr = Device->CreateRasterizerState(&rsDesc, &RSsolid);
 	if (FAILED(hr))return;
 
 	//深度ステンシルステート
@@ -543,8 +546,8 @@ skinned_mesh::~skinned_mesh()
 	if (meshes.at(0).index_buffer)meshes.at(0).index_buffer->Release();
 	if (meshes.at(0).vertex_buffer)meshes.at(0).vertex_buffer->Release();
 	if (Depth)Depth->Release();
-	if (RSSsolid)RSSsolid->Release();
-	if (RSSWireframe)RSSWireframe->Release();
+	if (RSsolid)RSsolid->Release();
+	if (RSWireframe)RSWireframe->Release();
 	if (SamplerDesc)SamplerDesc->Release();
 	
 
@@ -622,27 +625,159 @@ void  skinned_mesh::mesh::BufferEdit(ID3D11Device*Device,
 }
 
 
+
+
+//void skinned_mesh::render(ID3D11DeviceContext*Context,
+//	const DirectX::XMFLOAT4X4&world_view,
+//	const DirectX::XMFLOAT4X4& worldM,
+//	const DirectX::XMFLOAT4& light,
+//	const DirectX::XMFLOAT4& Material_color, 
+//	bool  bWareframe,
+//	float elapsed_time)
+//{
+//
+//	UINT stride = sizeof(vertex);
+//	UINT offset = 0;
+//
+//	cbuffer cb;
+//	cb.light_direction = light;
+//
+//															   // Set primitive topology
+//	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//
+//	//State
+//	if (bWareframe) Context->RSSetState(RSWireframe);
+//	else            Context->RSSetState(RSsolid);
+//
+//	// Set the input layout
+//	Context->IASetInputLayout(Layout);
+//
+//	// Render a triangle
+//	Context->VSSetShader(Vertex, NULL, 0);
+//	Context->PSSetShader(Pixel, NULL, 0);
+//
+//	//depth
+//	Context->OMSetDepthStencilState(Depth, 1);
+//
+//	/*sample*/
+//	Context->PSSetSamplers(0, 1, &SamplerDesc);
+//
+//	for (mesh &mesh : meshes)
+//	{
+//		//頂点バッファ||インデックスバッファが無ければ終了
+//		if (!mesh.vertex_buffer || !mesh.index_buffer)return;
+//		
+//		if (mesh.skeletal_animation.size() > 0)
+//		{
+//			int frame = mesh.skeletal_animation.animation_tick / mesh.skeletal_animation.sampling_time;
+//			if (frame > mesh.skeletal_animation.size() - 1)
+//			{
+//				frame = 0;
+//				mesh.skeletal_animation.animation_tick = 0;
+//			}
+//			std::vector<bone> &skeletal = mesh.skeletal_animation.at(frame);
+//			size_t number_of_bones = skeletal.size();
+//			_ASSERT_EXPR(number_of_bones < MAX_BONES, L"'the number_of_bones' exceeds MAX_BONES.");
+//			for (size_t i = 0; i < number_of_bones; i++)
+//			{
+//				XMStoreFloat4x4(&cb.bone_transforms[i], XMLoadFloat4x4(&skeletal.at(i).transform));
+//			}
+//			mesh.skeletal_animation.animation_tick += elapsed_time;
+//		}
+//		else {
+//			DirectX::XMStoreFloat4x4(&cb.bone_transforms[0], DirectX::XMMatrixIdentity());
+//			DirectX::XMStoreFloat4x4(&cb.bone_transforms[1], DirectX::XMMatrixIdentity());
+//			DirectX::XMStoreFloat4x4(&cb.bone_transforms[2], DirectX::XMMatrixIdentity());
+//		}
+//
+//		
+//		
+//		DirectX::XMStoreFloat4x4(&cb.world_view_projection,
+//			DirectX::XMLoadFloat4x4(&mesh.global_tramsform)*
+//			DirectX::XMLoadFloat4x4(&coordinate_conversion)*
+//			DirectX::XMLoadFloat4x4(&world_view));
+//
+//		DirectX::XMStoreFloat4x4(&cb.world,
+//			DirectX::XMLoadFloat4x4(&mesh.global_tramsform)*
+//			DirectX::XMLoadFloat4x4(&coordinate_conversion)*
+//			DirectX::XMLoadFloat4x4(&worldM));
+//
+//		//サブセット
+//		for (subset &subset : mesh.subsets) {
+//
+//			//Set vertex buffer
+//			Context->IASetVertexBuffers(0, 1, &mesh.vertex_buffer, &stride, &offset);
+//			//Set index Buffer
+//			Context->IASetIndexBuffer(mesh.index_buffer, DXGI_FORMAT_R32_UINT, 0);
+//
+//
+//			cb.material_color.x = subset.diffuse.color.x*Material_color.x;
+//			cb.material_color.y = subset.diffuse.color.y*Material_color.y;
+//			cb.material_color.z = subset.diffuse.color.z*Material_color.z;
+//			cb.material_color.w = Material_color.w;
+//
+//			Context->UpdateSubresource(CBuffer, 0, NULL, &cb, 0, 0);	//定数バッファにコピー
+//			Context->VSSetConstantBuffers(0, 1, &CBuffer);			   //シェーダーにデーターを渡す
+//
+//			Context->PSSetShaderResources(0, 1, &subset.diffuse.shader_resource_view);
+//
+//			Context->DrawIndexed(subset.index_start + subset.index_count, 0, 0);
+//		}
+//
+//		
+//	}
+//
+//}
+
+
+
 void skinned_mesh::render(ID3D11DeviceContext*Context,
 	const DirectX::XMFLOAT4X4&world_view,
 	const DirectX::XMFLOAT4X4& worldM,
 	const DirectX::XMFLOAT4& light,
-	const DirectX::XMFLOAT4& Material_color, 
+	const DirectX::XMFLOAT4& Material_color,
 	bool  bWareframe,
-	float elapsed_time)
+	float elapsed_time,
+	ID3D11VertexShader* Vertex,
+	ID3D11InputLayout*  Layout,
+	ID3D11PixelShader*  Pixel
+)
 {
 
 	UINT stride = sizeof(vertex);
 	UINT offset = 0;
 
-
 	cbuffer cb;
 	cb.light_direction = light;
+
+	// Set primitive topology
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//State
+	if (bWareframe) Context->RSSetState(RSWireframe);
+	else            Context->RSSetState(RSsolid);
+
+
+	if (!Vertex)	Vertex = this->Vertex;
+	if (!Layout)	Layout = this->Layout;
+	if (!Pixel)		Pixel  = this->Pixel;
+	// Set the input layout
+	// Render a triangle
+	Context->IASetInputLayout(Layout);
+	Context->VSSetShader(Vertex, NULL, 0);
+	Context->PSSetShader(Pixel, NULL, 0);
+
+	//depth
+	Context->OMSetDepthStencilState(Depth, 1);
+
+	/*sample*/
+	Context->PSSetSamplers(0, 1, &SamplerDesc);
 
 	for (mesh &mesh : meshes)
 	{
 		//頂点バッファ||インデックスバッファが無ければ終了
 		if (!mesh.vertex_buffer || !mesh.index_buffer)return;
-		
+
 		if (mesh.skeletal_animation.size() > 0)
 		{
 			int frame = mesh.skeletal_animation.animation_tick / mesh.skeletal_animation.sampling_time;
@@ -666,8 +801,8 @@ void skinned_mesh::render(ID3D11DeviceContext*Context,
 			DirectX::XMStoreFloat4x4(&cb.bone_transforms[2], DirectX::XMMatrixIdentity());
 		}
 
-		
-		
+
+
 		DirectX::XMStoreFloat4x4(&cb.world_view_projection,
 			DirectX::XMLoadFloat4x4(&mesh.global_tramsform)*
 			DirectX::XMLoadFloat4x4(&coordinate_conversion)*
@@ -692,37 +827,15 @@ void skinned_mesh::render(ID3D11DeviceContext*Context,
 			cb.material_color.z = subset.diffuse.color.z*Material_color.z;
 			cb.material_color.w = Material_color.w;
 
+			Context->UpdateSubresource(CBuffer, 0, NULL, &cb, 0, 0);	//定数バッファにコピー
+			Context->VSSetConstantBuffers(0, 1, &CBuffer);			   //シェーダーにデーターを渡す
+
 			Context->PSSetShaderResources(0, 1, &subset.diffuse.shader_resource_view);
 
 			Context->DrawIndexed(subset.index_start + subset.index_count, 0, 0);
 		}
 
-		Context->UpdateSubresource(CBuffer, 0, NULL, &cb, 0, 0);	//定数バッファにコピー
-		Context->VSSetConstantBuffers(0, 1, &CBuffer);			   //シェーダーにデーターを渡す
-		
-		// Set primitive topology
-		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		//State
-		if (bWareframe) Context->RSSetState(RSSWireframe);
-		else            Context->RSSetState(RSSsolid);
-
-		// Set the input layout
-		Context->IASetInputLayout(Layout);
-
-		// Render a triangle
-		Context->VSSetShader(Vertex, NULL, 0);
-		Context->PSSetShader(Pixel, NULL, 0);
-
-		//depth
-		Context->OMSetDepthStencilState(Depth, 1);
-
-		/*sample*/
-		Context->PSSetSamplers(0, 1, &SamplerDesc);
-
-		
 	}
 
 }
-
-

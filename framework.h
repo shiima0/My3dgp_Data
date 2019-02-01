@@ -1,10 +1,10 @@
 
 #pragma once
-
 #include <windows.h>
 #include <tchar.h>
 #include <sstream>
 #include <d3d11.h>
+
 
 #include"skinned_mesh.h"
 #include"sprite.h"
@@ -14,8 +14,12 @@
 #include "high_resolution_timer.h"
 
 
+
 class framework
 {
+
+private:
+	
 public:
 
 	CONST HWND hwnd;
@@ -23,23 +27,19 @@ public:
 	static CONST LONG SCREEN_HEIGHT = 720;
 	sprite*sprites[3];
 	
-
-	
-	
-	
-	ID3D11Device*            Device;
-	ID3D11DeviceContext*     Context;
-	IDXGISwapChain*          SwapChain;
-	ID3D11RenderTargetView*  RenderTargetView;
-	ID3D11DepthStencilView*  DepthStenciView;
+	 ID3D11Device*            Device;
+	 ID3D11DeviceContext*     Context;
+	 IDXGISwapChain*          SwapChain;
+	 ID3D11RenderTargetView*  RenderTargetView;
+	 ID3D11DepthStencilView*  DepthStenciView;
 
 	ID3D11Texture2D* DepthStencil = NULL;
 
-	skinned_mesh* sdk;
+	skinned_mesh* sdk[10];
 	
 	sprite*particle;
 	//ê}å`
-	geometric_primitive* cube;			//éläp
+	geometric_Cube* cube;			//éläp
 	geometric_Cylinder*  Cylinder;		//â~íå
 	geometric_Capsule*	 Capsule;		//ÉJÉvÉZÉã
 	geometric_Sphere*	 Sphere;		//ãÖ

@@ -25,7 +25,7 @@ geometric_primitive::geometric_primitive(ID3D11Device*Device) {
 	rsDesc.CullMode = D3D11_CULL_BACK;
 	rsDesc.FrontCounterClockwise = FALSE;
 	rsDesc.DepthClipEnable = TRUE;
-	hr = Device->CreateRasterizerState(&rsDesc, &RSSWireframe);
+	hr = Device->CreateRasterizerState(&rsDesc, &RSWireframe);
 	if (FAILED(hr))return;
 
 	//SOLID
@@ -34,7 +34,7 @@ geometric_primitive::geometric_primitive(ID3D11Device*Device) {
 	rsDesc.CullMode = D3D11_CULL_BACK;
 	rsDesc.FrontCounterClockwise = FALSE;
 	rsDesc.DepthClipEnable = TRUE;
-	hr = Device->CreateRasterizerState(&rsDesc, &RSSsolid);
+	hr = Device->CreateRasterizerState(&rsDesc, &RSsolid);
 	if (FAILED(hr))return;
 
 	//深度ステンシルステート
@@ -116,8 +116,8 @@ geometric_primitive::~geometric_primitive()
 	if (IBuffer)IBuffer->Release();
 	if (Buffer) Buffer->Release();
 	if (Depth)Depth->Release();
-	if (RSSsolid)RSSsolid->Release();
-	if (RSSWireframe)RSSWireframe->Release();
+	if (RSsolid)RSsolid->Release();
+	if (RSWireframe)RSWireframe->Release();
 	if (Layout)Layout->Release();
 
 	
@@ -163,8 +163,8 @@ void geometric_primitive::render(ID3D11DeviceContext*Context,
 
 	//State
 	
-	if(bWareframe) Context->RSSetState(RSSWireframe);
-	else          Context->RSSetState(RSSsolid);
+	if(bWareframe) Context->RSSetState(RSWireframe);
+	else          Context->RSSetState(RSsolid);
 
 	// Render a triangle
 	Context->VSSetShader(Vertex, NULL, 0);
@@ -337,7 +337,7 @@ geometric_Cube::geometric_Cube(ID3D11Device*Device):
 	indeices[face * 6 + 5] = face * 4 + 3;
 
 
-	//BufferEdit(Device, vertices,24, indeices, 36);
+	BufferEdit(Device, vertices,24, indeices, 36);
 	
 
 }
